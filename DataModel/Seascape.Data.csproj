@@ -1,0 +1,124 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{9659C956-327F-4234-983B-E15A9BC0CCAC}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Seascape.Data</RootNamespace>
+    <AssemblyName>Seascape.Data</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="com.seascape.db">
+      <HintPath>..\Lib\com.seascape.db.dll</HintPath>
+    </Reference>
+    <Reference Include="com.seascape.tools">
+      <HintPath>..\Lib\com.seascape.tools.dll</HintPath>
+    </Reference>
+    <Reference Include="LitJSON">
+      <HintPath>..\Lib\LitJSON.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net">
+      <HintPath>..\Lib\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="MySql.Data">
+      <HintPath>..\Lib\MySql.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Admin\_AdminUser.cs" />
+    <Compile Include="Tmessage\TMsg_Care.cs" />
+    <Compile Include="Tmessage\TMsg_Fund.cs" />
+    <Compile Include="Tmessage\TMsg_Grade.cs" />
+    <Compile Include="WebView\_ProductFWeb.cs" />
+    <Compile Include="WebView\_WebOrder.cs" />
+    <Compile Include="_Addr.cs" />
+    <Compile Include="Admin\_AdminLimit.cs" />
+    <Compile Include="Admin\_AdminLog.cs" />
+    <Compile Include="Admin\_AdminRole.cs" />
+    <Compile Include="Admin\Sys_Result.cs" />
+    <Compile Include="_Attach.cs" />
+    <Compile Include="_BalanceLog.cs" />
+    <Compile Include="_Class.cs" />
+    <Compile Include="Count\_CountAll.cs" />
+    <Compile Include="Finance\_Finance.cs" />
+    <Compile Include="_Coin.cs" />
+    <Compile Include="_Item.cs" />
+    <Compile Include="_Log.cs" />
+    <Compile Include="_Complaint.cs" />
+    <Compile Include="_Employee.cs" />
+    <Compile Include="_Evaluate.cs" />
+    <Compile Include="_OrderPList.cs" />
+    <Compile Include="_Post.cs" />
+    <Compile Include="_Product.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="_ProductPost.cs" />
+    <Compile Include="_Sign.cs" />
+    <Compile Include="_SmsCode.cs" />
+    <Compile Include="_TemplateMsg.cs" />
+    <Compile Include="Tmessage\MessageValue.cs" />
+    <Compile Include="Tmessage\TMsg_C.cs" />
+    <Compile Include="Tmessage\TMsg_Order.cs" />
+    <Compile Include="Tmessage\TMsg_Refund.cs" />
+    <Compile Include="Tmessage\TMsg_Voucher.cs" />
+    <Compile Include="Tmessage\TMsg_Work.cs" />
+    <Compile Include="Tool\DataConnectionManager.cs" />
+    <Compile Include="Tool\DbCenter.cs" />
+    <Compile Include="Tool\ImageScale.cs" />
+    <Compile Include="Tool\Main.cs" />
+    <Compile Include="_ULog.cs" />
+    <Compile Include="_Unit.cs" />
+    <Compile Include="_User.cs" />
+    <Compile Include="View\_Custom.cs" />
+    <Compile Include="View\_FXCount.cs" />
+    <Compile Include="View\_OrderInfo.cs" />
+    <Compile Include="View\_SaleMx.cs" />
+    <Compile Include="View\_Syslog.cs" />
+    <Compile Include="_WxPay.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Seascape.Model\Seascape.Model.csproj">
+      <Project>{b4606c85-f152-4236-9bd7-b80c0dd6f9a9}</Project>
+      <Name>Seascape.Model</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

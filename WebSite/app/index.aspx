@@ -22,6 +22,7 @@
             <div class="weui-tab__panel">
                 <div class="swiper-container"></div>
                 <div class="category-area"></div>
+                <div class="vip-panel"></div>
                 <div class="active-panel"></div>
                 <div class="product-top-list">
                     <div class="title-row">大家正在买</div>

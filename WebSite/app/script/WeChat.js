@@ -30,8 +30,8 @@ function initWeChat(config) {
 
 function preShare(id) {
     var obj = {
-        title: '山西出行酒店预订上线啦，欢迎预订！',
-        desp: '山西出行在线酒店上线啦，欢迎预订！',
+        title: '万品微店，欢迎预订！',
+        desp: '万品微店，欢迎预订！',
         link: "http://hjhk.edmp.cc/app/hotel/share.html",
         logo: "http://hjhk.edmp.cc/img/logo.jpg",
         success: function () { },

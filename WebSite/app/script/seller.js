@@ -1,8 +1,10 @@
 ﻿var SSJ = {};
 var ajaxServerUrl = "/service/handler.ashx";
-var ajaxBaseUrl = "/service/handler.ashx";
 var PageName = "";
-var BASE_URL = "http://ns.seascapeapp.cn/";
+var BASE_URL = "http://s.seascapeapp.cn/";
+var debug_openId = "o9jMc1rBitv6-7Bi6cFWqO0Omq0Y";
+var storage = window.localStorage;
+var cookie_before = "wpshopV1_";
 
 SSJ.init = function () {
     var pageUrl = window.location.href;
@@ -45,19 +47,20 @@ SSJ.init = function () {
     }
 }
 
+
+
 var ShopCarPage = {
+    _PS:[],
     init: function () {
-        ShopCarPage.LoadList();
+        ShopCarPage.loadStorage();
+        ShopCarPage.ReaderList();
     },
-    LoadList: function () {
-        var list = [
-            { Id: 1, Name: '奶油味爆米花 150g', Price: 12.90, Num: 2, PhotoUrl: 'images/p1-1.jpg' },
-            { Id: 2, Name: '芒果干 120gx3袋', Price: 27.90, Num: 3, PhotoUrl: 'images/p1-2.jpg' },
-        ];
+    ReaderList: function () {
         var FeePostLimit = 39;
         var html = '<div class="shopcar-list"><div class="info-bar"><h3>满' + FeePostLimit + '元免运费</h3><h6><span>已免运费</span><i class="icon iconfont icon-warning"></i></h6></div>'
-        html += '<ul>'  
-        var allPrice = 0,allNum=0;
+        html += '<ul>'
+        var allPrice = 0, allNum = 0;
+        var list = ShopCarPage._PS;
         $(list).each(function (i, _o) {
             var id = _o.Id;
             html += '<li data-id="' + id + '"><div class="check-col weui-cells_checkbox"><label class="weui-cell weui-check__label" for="chk_' + id + '"><div class="weui-cell__hd"><input type="checkbox" name="chkProduct" class="weui-check" id="chk_' + id + '"><i class="weui-icon-checked"></i></div></label></div>';
@@ -74,47 +77,66 @@ var ShopCarPage = {
         }
         $(".block-btn-col span").text("共" + allNum + "件");
         $(".price-info-col em").text(allPrice);
-        $(".price-info-col h6").text("总价：" + allPrice+"，优惠：0.00");
+        $(".price-info-col h6").text("总价：" + allPrice + "，优惠：0.00");
     },
+    addToShopCar: function (obj) {
+        ShopCarPage.loadStorage();
+        var _obj = null;
+        var _ind = -1;
+        if (ShopCarPage._PS.length > 0) {
+            for (var i = 0; i < ShopCarPage._PS.length; i++) {
+                var _o = ShopCarPage._PS[i];
+                if (_o.Id == obj.Id && _o.Cid == obj.Cid) {
+                    _ind = i;
+                    _obj = _o;
+                    _obj.Num += obj.Num;
+                    break;
+                }
+            }
+        }
+        else {            
+            _obj = { Id: obj.Id, Name: obj.Name, PhotoUrl: obj.PhotoUrl, Cid: obj.Cid, Num: obj.Num, DbNum:obj.DbNum, Price: obj.Price, CateName: obj.CateName };
+        }
+       
+        if (_ind > -1) {
+            ShopCarPage._PS[_ind] = _obj;
+        }
+        else {
+            ShopCarPage._PS.push(_obj);
+        }
+        ShopCarPage.saveToStorage();
+    },
+    loadStorage: function () {
+        var json = $get("SHOP_CAR");
+        if (typeof (json) != 'undefined' && json != null && json != "") {
+            ShopCarPage._PS = JSON.parse(json);
+        }
+        else {
+            ShopCarPage._PS = [];
+        }
+    },
+    saveToStorage: function () {
+        if (ShopCarPage._PS.length > 0) {
+            $set("SHOP_CAR", JSON.stringify(ShopCarPage._PS));
+        }
+    }
 };
 
 var DetailPage = {
+    Pid:0,
     init: function () {
+        DetailPage.Pid = request("id");
         DetailPage.Load();
     },
     Load: function () {
-        var obj = {
-            Return: 0, data: {
-                Id: 1,
-                Name: '三只松鼠芒果干',
-                Desp: '休闲零食蜜饯果脯果干风味小吃',
-                Price: 69.0,
-                RealPrice: 29.9,
-                SellNum: 176956,
-                MaxNum: 85,
-                Content: "<img src='images/pd-1-1.jpg'/><img src='images/pd-1-2.jpg'/><img src='images/pd-1-3.jpg'/><img src='images/pd-1-4.jpg'/><img src='images/pd-1-5.jpg'/><img src='images/pd-1-6.jpg'/><img src='images/pd-1-7.jpg'/><img src='images/pd-1-8.jpg'/><img src='images/pd-1-9.jpg'/><img src='images/pd-1-10.jpg'/><img src='images/pd-1-11.jpg'/><img src='images/pd-1-12.jpg'/>",
-                Params:"生产许可证编号：SC11834020305037<br/>产品标准号：GB/T10782<br/>厂名：三只松鼠股份有限公司<br/>厂址：安徽省芜湖市弋江区芜湖高新技术产业开发区久盛路8号;安徽省芜湖市弋江区高新开发区南区龙华厂房<br/>厂家联系方式：400-800-4900<br/>配料表：芒果、白砂糖、葡萄糖、玉米糖浆、麦芽糖浆、食用盐<br/>储藏方法：请置于阴凉干燥处<br/>保质期：360 天<br/>食品添加剂：柠檬酸、丙三醇、焦亚硫酸钠，食品用香料、香精<br/>净含量: 348g<br/>包装方式: 包装<br/>品牌: Three Squirrels/三只松鼠<br/>系列: 松鼠云果园-芒果干116gx3 袋装<br/>食品口味: 116gx3袋<br/>产地: 中国大陆<br/>省份: 安徽省",
-                Subject: [{Id:1, Name: '116gx3袋', Price: 27.9 }, {Id:2, Name: '116gx6袋', Price: 51.9}],
-                Comment: {
-                    RatePeer: 4.9, List: [
-                        { Id: 1, PhotoUrl: 'images/photo1.jpg',AddOn:'2017-08-21 11:09:08', Name: '汪***7', RateStar: 4, Msg: '包装精美，味道不错，价格有点小贵' },
-                        { Id: 2, PhotoUrl: 'images/photo2.jpg', AddOn: '2017-08-21 11:09:08', Name: 'S***e', RateStar: 5, Msg: '满满一箱的东西，让人感觉特别爽呀。有很完备的开箱器，开壳器，还有收纳袋，总之还是很完美的。味道也很不错，虽然我就开了一部分东西尝了一下，哈哈哈，是一次非常愉快的购物哟，东西比较多，我就不一一评论了。' },
-                        { Id: 3, PhotoUrl: 'images/photo3.jpg', AddOn: '2017-08-21 11:09:08', Name: 't***9', RateStar: 4, Msg: '特别喜欢，收到的时候就忍不住拆开来吃了，跟想象中的一样，没有想到还送了小礼物，客服的服务特别好，超级爱我家鼠南歌和鼠开怀，特别贴心，而且还很可爱，非常愉快的一次购物，聊天还总是忍不住想笑起来，特别开心' },
-                        { Id: 4, PhotoUrl: 'images/photo4.jpg', AddOn: '2017-08-21 11:09:08', Name: '关***团', RateStar: 3, Msg: '物流很棒 发货还有短信通知 包装也超可爱！ 非常喜欢这个牌子的 一直力挺 请继续加油！ 现在尝试一下味道 亲们赶快下手吧 超棒棒耶必须好评呐呐 哇' },
-                        { Id: 5, PhotoUrl: 'images/photo5.jpg', AddOn: '2017-08-21 11:09:08', Name: '渡***凡', RateStar: 4, Msg: '嗯……三天到货应该算快了吧……外包装有一点破损，不过不影响里面的东西，价格比超市的便宜，还准备了鼠小巾和果壳袋，很贴心呢～还有一个小胸针也很可爱啊' },
-                    ]
-                },
-                PhotoUrl: ['images/p1-1.jpg', 'images/p1-2.jpg', 'images/p1-3.jpg', 'images/p1-4.jpg']
-            }
-        };
-        DetailPage.Load_cb(obj);
+        $ajax({ fn: 106, pid: DetailPage.Pid }, DetailPage.Load_cb, true);
     },
     Load_cb: function (o) {
         if (o.Return == 0) {
             var html = '<div class="swiper-wrapper">';
-            var banner = o.data.PhotoUrl;
+            var banner = o.data.imgUrl;
             $(banner).each(function (i, _o) {
-                html += '<div class="swiper-slide"><img src="' + _o + '" /></div>';
+                html += '<div class="swiper-slide"><img src="' + BASE_URL + _o + '" /></div>';
             });
             html += '</div><div class="swiper-pagination"></div>';
             $(".swiper-container").append(html);
@@ -124,9 +146,10 @@ var DetailPage = {
                 pagination: '.swiper-pagination'
             });
             //标题栏
-            html = '<div class="title-bar"><h3>' + o.data.Name + '</h3><h6>' + o.data.Desp + '</h6><div class="price-row"><div class="price-col"><em>' + o.data.RealPrice + '</em><s>' + o.data.Price + '</s></div><div class="num-col">销量:' + o.data.SellNum + '</div></div></div>'
+            html = '<div class="title-bar"><h3>' + o.data.pName + '</h3><h6>' + o.data.desp + '</h6><div class="price-row"><div class="price-col"><em>' + o.data.price + '</em><s>' + o.data.mPrice + '</s></div><div class="num-col">库存:' + o.data.storeNum + '</div></div></div>'
             $('.detail-info').append(html);
             //评价
+            /*
             html = '<div class="comment-block"><div class="title-row"><div class="title-col">大家说</div><div class="rate-col">好评率：<em>' + o.data.Comment.RatePeer + '</em><i class="icon iconfont icon-arrowright"></i></div></div>';
             html += '<ul>'
             $(o.data.Comment.List).each(function (i, _o) {
@@ -140,42 +163,54 @@ var DetailPage = {
                 html += '</div ></div > <div class="date-col">' + formatDate(_o.AddOn) + '</div></div > <p>' + _o.Msg + '</p></li > '
             });
             html += '</ul></div>';
-            $('.detail-info').append(html);
-            $('.detail-info').append('<p class="content">' + o.data.Content + '</p>');
-            $('.detail-info').append('<div class="param-block"><h4>&nbsp;规格参数</h4><p>' + o.data.Params + '</p></div>');
-            
+            $('.detail-info').append(html);*/
+            $('.detail-info').append('<p class="content">' + unescape(o.data.pInfo) + '</p>');           
         }
     },
 };
 
 var ListPage = {
+    PageNo:1,
     init: function() {
         ListPage.LoadProductList();
     },
-    LoadProductList: function() {
-        var obj = {
-            Return: 0, data: [
-                { Id: 10, Name: '芒果干116g x 3袋', Desp: '为芒果干而生的优质品种', PhotoUrl: 'images/p1.jpg', Price: '69.0', RealPrice: '28.9' },
-                { Id: 10, Name: '芒果干116g x 3袋', Desp: '为芒果干而生的优质品种', PhotoUrl: 'images/p1.jpg', Price: '69.0', RealPrice: '28.9' },
-                { Id: 10, Name: '芒果干116g x 3袋', Desp: '为芒果干而生的优质品种', PhotoUrl: 'images/p1.jpg', Price: '69.0', RealPrice: '28.9' },
-                { Id: 10, Name: '芒果干116g x 3袋', Desp: '为芒果干而生的优质品种', PhotoUrl: 'images/p1.jpg', Price: '69.0', RealPrice: '28.9' },
-                { Id: 10, Name: '芒果干116g x 3袋', Desp: '为芒果干而生的优质品种', PhotoUrl: 'images/p1.jpg', Price: '69.0', RealPrice: '28.9' },
-                { Id: 10, Name: '芒果干116g x 3袋', Desp: '为芒果干而生的优质品种', PhotoUrl: 'images/p1.jpg', Price: '69.0', RealPrice: '28.9' }
-            ]
-        };
-        ListPage.LoadProductList_cb(obj);
+    LoadProductList: function () {
+        $ajax({ fn: 102, pid: request("sid"), page: ListPage.PageNo }, ListPage.LoadProductList_cb, true); 
     },
-    LoadProductList_cb: function(o) {
-        if (o.Return == 0) {
-            $(o.data).each(function(i, _o) {
-                var html = '<li data-id="' + _o.Id + '"><img src="' + _o.PhotoUrl + '" />';
-                html += '<h4>' + _o.Desp + '</h4>';
-                html += '<div class="info-bar"><div class="desp-col">' + _o.Name + '<br/><em>￥' + _o.RealPrice + '</em><s>￥' + _o.Price + '</s></div>';
+    LoadProductList_cb: function (o) {
+        if ($(".weui-loadmore").length > 0) {
+            $(".weui-loadmore").remove();
+        }
+        if (o.Return == 0 && o.data.length>0) {
+            $(o.data).each(function (i, _o) {
+                var imgUrl = _o.imgUrl.split('@')[0];
+                var html = '<li data-id="' + _o.id + '"><img src="' + BASE_URL + imgUrl + '" />';
+                html += '<h4>' + _o.pName + '</h4><h5>' + _o.desp + '</h5>';
+                html += '<div class="info-bar"><div class="desp-col"><em>￥' + _o.price + '</em><s>￥' + _o.mPrice + '</s></div>';
                 html += '<div class="icon-col"><i class="icon iconfont icon-shopcart10"></i></div></div></li>';
                 $(".product-list ul").append(html);
             });
+            ListPage.PageNo = o.Ext.PageNo;
+
+            if (o.Ext.PageCount > o.Ext.PageNo) {
+                //还有更多
+                var moreHtml = '<div class="weui-loadmore weui-loadmore_line"><span class="weui-loadmore__tips" >加载更多</span></div>';
+                $(".product-list").append(moreHtml);
+                $(".weui-loadmore__tips").on("click", ListPage.LoadProductList);
+            }
+            else {
+                //没有更多了
+                var moreHtml = '<div class="weui-loadmore weui-loadmore_line"><span class="weui-loadmore__tips" >没有更多了</span></div>';
+                $(".product-list").append(moreHtml);
+            }   
+
             $(".product-list ul li img,h4,.info-bar>.desp-col").on("click", function() { $go("detail.aspx?id=" + $(this).parents("li").attr("data-id")); });
             $(".info-bar>.icon-col").on("click", ListPage.AddProductToCar);
+        }
+        else {
+            var html = '<div style="margin-top:15rem;" class="weui-loadmore weui-loadmore_line"><span class="weui-loadmore__tips" >暂无产品，点击刷新</span></div>';
+            $(".product-list").append(html);
+            $(".weui-loadmore__tips").on("click", ListPage.LoadProductList);
         }
     }
 };
@@ -185,24 +220,12 @@ var SubjectPage = {
         SubjectPage.Load();
     },
     Load: function () {
-        var obj = {
-            Return: 0, data: [
-                { Id: 1, Name: '水果', Icon: 'icon-iconfontshipin' },
-                { Id: 2, Name: '母婴', Icon: 'icon-iconfonttongzhuangmuying' },
-                { Id: 3, Name: '鞋帽', Icon: 'icon-iconfontxiebaopeishi' },
-                { Id: 4, Name: '宠物', Icon: 'icon-iconfontgongyichongwu' },
-                { Id: 5, Name: '衣服', Icon: 'icon-iconfontfuzhuangneiyi' },
-                { Id: 6, Name: '电器', Icon: 'icon-iconfontdiangongdianqi' },
-                { Id: 7, Name: '美妆', Icon: 'icon-iconfontmeizhuangrihua' }
-            ]
-        };
-        SubjectPage.Load_cb(obj); SubjectPage.Load_cb(obj); SubjectPage.Load_cb(obj);
+        $ajax({ fn: 101 }, SubjectPage.Load_cb, true);       
     },
     Load_cb: function (o) {
-        if (o.Return == 0) {
-            var bgcolor = ['64c333', 'fa5c5c', '6347ed', 'f7a831', '3bc7b0', '427def','e54077'];
+        if (o.Return == 0) {            
             $(o.data).each(function (i, _o) {
-                var html = '<li data-id="'+ _o.Id +'"><i class="icon iconfont '+ _o.Icon +'"  style= "background-color:#'+ bgcolor[i%7] +';" ></i ><h5>'+ _o.Name +'</h5></li>'
+                var html = '<li data-id="' + _o.id + '"><img src="' + BASE_URL+ _o.imgUrl + '"/><h5>' + _o.cName + '</h5></li>'
                 $("ul").append(html);
             });
             $("li").on("click", function () {
@@ -213,31 +236,26 @@ var SubjectPage = {
 };
 
 var IndexPage = {
+    PDATA:[],
     init: function () {
+        CheckWechatUserInfo();
         IndexPage.LoadBanner();
         IndexPage.LoadSubject();
+        IndexPage.LoadVipProduct();
         IndexPage.LoadActiveProduct();
         IndexPage.LoadTopProduct();
-    },
+    },   
     LoadTopProduct: function() {
-        var obj = {
-            Return: 0, data: [
-                { Id: 10, Name: '芒果干116g x 3袋', Desp: '为芒果干而生的优质品种', PhotoUrl: 'images/p1.jpg', Price: '69.0', RealPrice: '28.9' },
-                { Id: 10, Name: '芒果干116g x 3袋', Desp: '为芒果干而生的优质品种', PhotoUrl: 'images/p1.jpg', Price: '69.0', RealPrice: '28.9' },
-                { Id: 10, Name: '芒果干116g x 3袋', Desp: '为芒果干而生的优质品种', PhotoUrl: 'images/p1.jpg', Price: '69.0', RealPrice: '28.9' },
-                { Id: 10, Name: '芒果干116g x 3袋', Desp: '为芒果干而生的优质品种', PhotoUrl: 'images/p1.jpg', Price: '69.0', RealPrice: '28.9' },
-                { Id: 10, Name: '芒果干116g x 3袋', Desp: '为芒果干而生的优质品种', PhotoUrl: 'images/p1.jpg', Price: '69.0', RealPrice: '28.9' },
-                { Id: 10, Name: '芒果干116g x 3袋', Desp: '为芒果干而生的优质品种', PhotoUrl: 'images/p1.jpg', Price: '69.0', RealPrice: '28.9' }
-            ]
-        };
-        IndexPage.LoadTopProduct_cb(obj);
+        $ajax({ fn: 102, type: 0 }, IndexPage.LoadTopProduct_cb, true);
     },
     LoadTopProduct_cb: function(o) {
         if (o.Return == 0) {
-            $(o.data).each(function(i, _o) {
-                var html = '<li data-id="' + _o.Id + '"><img src="' + _o.PhotoUrl + '" />';
-                html += '<h4>' + _o.Desp + '</h4>';
-                html += '<div class="info-bar"><div class="desp-col">' + _o.Name + '<br/><em>￥' + _o.RealPrice + '</em><s>￥' + _o.Price + '</s></div>';
+            IndexPage.PDATA = o.data;
+            $(o.data).each(function (i, _o) {
+                var imgUrl = _o.imgUrl.split('@')[0];
+                var html = '<li data-id="' + _o.id + '" data-ind="'+ i +'"><img src="' + BASE_URL + imgUrl + '" />';
+                html += '<h4>' + _o.pName + '</h4>';
+                html += '<div class="info-bar"><div class="desp-col"><em>￥' + _o.price + '</em><s>￥' + _o.mPrice + '</s></div>';
                 html += '<div class="icon-col"><i class="icon iconfont icon-shopcart10"></i></div></div></li>';
                 $(".product-top-list ul").append(html);
             });
@@ -247,39 +265,36 @@ var IndexPage = {
     },
     AddProductToCar: function() {
         var id = $(this).parents("li").attr("data-id");
-        alert("add to shopcar ["+ id +"]")
+        var ind = $(this).parents("li").attr("data-ind");
+        var obj = IndexPage.PDATA[ind];
+        ShopCarPage.addToShopCar({ Id: obj.id, Cid: 0, Name: obj.pName, PhotoUrl: obj.imgUrl, Price: obj.price });
     },
     LoadActiveProduct: function () {
-        var obj = { Return: 0, data: { Id: 9, Name: '芒果干120gx3袋', Desp: '爆卖1000万 吃出大鲜芒的味道', Price: '27.9', PhotoUrl: 'images/active.jpg' } };
-        IndexPage.LoadActiveProduct_cb(obj);
+        $ajax({ fn: 102, type: 4 }, IndexPage.LoadActiveProduct_cb, true);
     },
-    LoadActiveProduct_cb: function(o) {
-        if (o.Return == 0) {
-            var html = '<div class="title-bar">今日推荐</div>';
-            html += '<img src="' + o.data.PhotoUrl + '" />';
+    LoadActiveProduct_cb: function (o) {
+        if (o.Return == 0 && o.data.length>0) {
+            var html = '<div class="title-row">今日推荐</div>';            
+            var data = o.data[0];
+            var imgUrl = data.imgUrl.split('@')[0];
+            html += '<img src="' + BASE_URL + imgUrl + '" />';
             html += '<div class="info-bar">'
-            html += '<div class="left-col">' + o.data.Name + '<h6>' + o.data.Desp + '</h6></div>'
-            html += '<div class="right-col">￥' + o.data.Price +'</div>'
-            html += ' </div>'
+            html += '<div class="left-col">' + data.pName + '<h6>' + data.desp + '</h6></div>'
+            html += '<div class="right-col"><em>￥' + data.price +'</em><i class="icon iconfont icon-shopcart10"></i></div>'
+            html += '</div>'
             $('.active-panel').append(html);
-            $(".active-panel").on("click", function() {$go("detail.aspx?id="+o.data.Id) });
+            $(".active-panel").on("click", function() {$go("detail.aspx?id="+data.id) });
         }
     },
     LoadBanner: function () {
-        var obj = {
-            Return: 0, data: [{ Id: 1, Name: '香辣鱼尾鱼排', Url: 'images/ad-01.jpg' },
-            { Id: 2, Name: '卤鸭掌', Url: 'images/ad-02.jpg' },
-            { Id: 3, Name: '味芝元鱼棒', Url: 'images/ad-03.jpg' },
-            { Id: 4, Name: '蒙自石榴', Url: 'images/ad-04.jpg' },
-            ]
-        };
-        IndexPage.LoadBanner_cb(obj);
+        $ajax({ fn: 102, type: 3 }, IndexPage.LoadBanner_cb, true);
     },
     LoadBanner_cb: function (o) {
         if (o.Return == 0) {
             var html = '<div class="swiper-wrapper">';
             $(o.data).each(function (i, _o) {
-                html += '<div class="swiper-slide"><a alt="' + _o.Name + '" href="detail.aspx?id=' + _o.Id + '"><img src="' + _o.Url + '" /></a></div>';
+                var imgUrl = _o.imgUrl.split('@')[0];
+                html += '<div class="swiper-slide"><a alt="' + _o.pName + '" href="detail.aspx?id=' + _o.id + '"><img src="' + BASE_URL + imgUrl + '" /></a></div>';
             });
             html += '</div><div class="swiper-pagination"></div>';
             $(".swiper-container").append(html);
@@ -291,27 +306,15 @@ var IndexPage = {
         }
     },
     LoadSubject: function () {
-        var obj = {
-            Return: 0, data: [
-                { Id: 1, Name: '水果', Icon: 'icon-iconfontshipin' },
-                { Id: 2, Name: '母婴', Icon: 'icon-iconfonttongzhuangmuying' },
-                { Id: 3, Name: '鞋帽', Icon: 'icon-iconfontxiebaopeishi' },
-                { Id: 4, Name: '宠物', Icon: 'icon-iconfontgongyichongwu' },
-                { Id: 5, Name: '衣服', Icon: 'icon-iconfontfuzhuangneiyi' },
-                { Id: 6, Name: '电器', Icon: 'icon-iconfontdiangongdianqi' },
-                { Id: 7, Name: '美妆', Icon: 'icon-iconfontmeizhuangrihua' }
-            ]
-        };
-        IndexPage.LoadSubject_cb(obj); 
+        $ajax({ fn: 101 }, IndexPage.LoadSubject_cb, true);
     },
     LoadSubject_cb: function (o) {
-        if (o.Return == 0) {
-            var bgcolor = ['64c333', 'fa5c5c', '6347ed', 'f7a831', '3bc7b0', '427def', 'e54077'];
+        if (o.Return == 0) {            
             $(o.data).each(function (i, _o) {
-                var html = '<div class="category__item" data-id="' + _o.Id + '"><i class="icon iconfont ' + _o.Icon + '"  style= "background-color:#' + bgcolor[i % 7] + ';" ></i ><h5>' + _o.Name + '</h5></div>'
+                var html = '<div class="category__item" data-id="' + _o.id + '"><img src="' + BASE_URL + _o.imgUrl + '"  ></img><h5>' + _o.cName + '</h5></div>'
                 $(".category-area").append(html);
             });
-            var html = '<div class="category__item" data-id="0"><i class="icon iconfont icon-all1"  style= "background-color:#dedede;" ></i ><h5>更多</h5></div>'
+            var html = '<div class="category__item" data-id="0"><img src="images/more.png"></img><h5>更多</h5></div>'
             $(".category-area").append(html);
             $(".category__item").on("click", function () {
                 var sid = parseInt($(this).attr("data-id"));
@@ -321,6 +324,26 @@ var IndexPage = {
                     $go("list.aspx?sid=" + $(this).attr("data-id"));
                 }
             })
+        }
+    },
+    LoadVipProduct: function () {
+        $ajax({ fn: 102, type: 2 }, IndexPage.loadVipProduct_cb, true);
+    },
+    loadVipProduct_cb: function (o) {
+        if (o.Return == 0 && o.data.length > 0) {
+            var html = '<div class="title-row">会员专享</div><ul></ul>';
+            $('.vip-panel').append(html);
+            $(o.data).each(function (i,_o) {
+                var data = _o;
+                var imgUrl = data.imgUrl.split('@')[0];
+                html = '<li data-id="'+ data.id +'"><div class="img-col"><img src="' + BASE_URL + imgUrl + '" /></div>';
+                html += '<div class="info-col">'
+                html += '<h3>' + data.pName + '</h3><h5>' + data.desp + '</h5>'
+                html += '<div class="price-row"><div class="price-col">会员专享￥<em>' + data.price + '</em></div><div class="btn-col"><div class="btn-go">立即抢购</div></div>'
+                html += '</div></li>'
+                $('.vip-panel ul').append(html);
+            });
+            $(".vip-panel ul li").on("click", function () { $go("detail.aspx?id=" + data.id) });
         }
     }
 };
@@ -347,14 +370,7 @@ var controlId = -1;
 function controlLayerSwitch() {
     window.onpopstate = function () {
         if (controlId > 1000) {
-            if (controlId == 1001) {
-                _DRP.hide();                
-            } else if (controlId == 1002) {
-                CityPiacker.hide();
-            } else if (controlId == 1003 || controlId == 1004) {
-                $(".hotel-keyword-picker").hide();           
-            }
-            $(".page").show();
+               
         }
     }
 }
@@ -391,4 +407,64 @@ function ConvertShowState(n) {
             break;
     }
     return result;
+}
+
+
+function CheckWechatUserInfo() {
+    var code = getParam("code");
+    if (code == "") { return GetWechatLink("broker", PageName + ".aspx"); }
+    var openid = $get('openid');
+    if (code != "" && (openid == null || openid == "")) {
+        getOpenId(code, getMemberInfo);
+    }
+}
+
+function getOpenId(code, callback) {
+    if ($isDebug) {
+        $set('openid', debug_openId, cookie_obj);
+        callback();
+    }
+    else {
+        var data = { fn: 1, code: code, source: request("state") };
+        $ajax(data, function (o) {
+            if (o.Return == 1) {
+                return;
+            }
+            else {
+                $set('openid', o.data);
+                callback();
+            }
+        }, false);
+    }
+}
+
+function getMemberInfo() {
+    if ($get('userid') == null) {
+        $ajax({ fn: 2, openid: $get('openid'), code: request("code"), source: request("state") }, getMemberInfoCallBack, false);
+    }
+}
+
+function getMemberInfoCallBack(o) {
+    if (o.Return == 0) {
+        var user = o.data;
+        if (user != null) {
+            $set('userid', user.id);
+            $set('photourl', user.photoUrl);
+            $set('mobile', user.mobile);
+            $set('contact', user.contact);
+            $set('nickname', user.nickName);
+            $set('utype', user.uType);
+            $set('sex', user.sex);
+        }
+    }
+}
+
+function GetWechatLink(folder, page) {
+    if ($isDebug) {
+        $set('openid', debug_openId, cookie_obj);
+        window.location.href = window.location.href + "?code=debug";
+    }
+    else {
+        $go("https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx72bba0f3cbe6e8ca&redirect_uri=http%3a%2f%2fs.seascapeapp.cn%2fapp%2f" + (folder.length > 0 ? (folder + "%2f"):"") + page + "&response_type=code&scope=snsapi_userinfo&state=i#wechat_redirect");
+    }
 }

@@ -28,7 +28,7 @@
             </div> 
             <div class="shopCarIcon">
                 <i class="icon iconfont icon-shopcart10"></i>
-                <span class="weui-badge" style="position: absolute;top: -.4em;right: 0;">8</span>
+                <span class="weui-badge" style="display:none; position: absolute;top: -.4em;right: 0;">0</span>
             </div>
         </div>       
     </div>

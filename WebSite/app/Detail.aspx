@@ -24,7 +24,7 @@
             <div class="page__ft">
                 <div class="cart-col">
                     <i class="icon iconfont icon-shopcart10"></i>
-                    <span class="weui-badge">8</span>
+                    <span class="weui-badge"></span>
                 </div>
                 <div class="fav-col">
                      <i class="icon iconfont icon-favorite"></i>
