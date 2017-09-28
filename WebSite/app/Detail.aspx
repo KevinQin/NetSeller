@@ -24,9 +24,9 @@
             <div class="page__ft">
                 <div class="cart-col">
                     <i class="icon iconfont icon-shopcart10"></i>
-                    <span class="weui-badge"></span>
+                    <span class="weui-badge" style="display:none;"></span>
                 </div>
-                <div class="fav-col">
+                <div class="fav-col" style="display:none;">
                      <i class="icon iconfont icon-favorite"></i>
                 </div>
                 <div class="btn-col">
@@ -36,6 +36,7 @@
             </div>
         </div>       
     </div>
+   
 </body>
 <script src="//r.edmp.cc/jquery/jquery-2.2.3.min.js"></script>
 <script src="//r.edmp.cc/jquerycookie/jquery.cookie.js"></script>

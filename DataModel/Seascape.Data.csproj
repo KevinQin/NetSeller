@@ -33,19 +33,19 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="com.seascape.db">
-      <HintPath>..\Lib\com.seascape.db.dll</HintPath>
+      <HintPath>..\Include\com.seascape.db.dll</HintPath>
     </Reference>
     <Reference Include="com.seascape.tools">
-      <HintPath>..\Lib\com.seascape.tools.dll</HintPath>
+      <HintPath>..\Include\com.seascape.tools.dll</HintPath>
     </Reference>
     <Reference Include="LitJSON">
-      <HintPath>..\Lib\LitJSON.dll</HintPath>
+      <HintPath>..\Include\LitJSON.dll</HintPath>
     </Reference>
     <Reference Include="log4net">
-      <HintPath>..\Lib\log4net.dll</HintPath>
+      <HintPath>..\Include\log4net.dll</HintPath>
     </Reference>
     <Reference Include="MySql.Data">
-      <HintPath>..\Lib\MySql.Data.dll</HintPath>
+      <HintPath>..\Include\MySql.Data.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

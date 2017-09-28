@@ -21,7 +21,7 @@
                 <div class="stand-bar">
                     <div class="back-col"></div>
                     <div class="title-col">购物车</div>
-                    <div class="icon-col">编辑</div>
+                    <div class="icon-col" data-act="edit" id="btnEdit">编辑</div>
                 </div>
             </div>
             <div class="page__bd" style="margin-top:2.5rem;">
@@ -31,7 +31,7 @@
                 <div class="check-col weui-cells_checkbox">
                     <label class="weui-cell weui-check__label" for="chkAll">
                         <div class="weui-cell__hd">
-                            <input type="checkbox" name="chkAll" class="weui-check" id="chkAll">
+                            <input type="checkbox" checked="checked" name="chkAll" class="weui-check" id="chkAll">
                             <i class="weui-icon-checked"></i>
                         </div>
                         <div class="weui-cell__bd">
@@ -43,11 +43,11 @@
                     <span>应付：</span><em>-</em>
                     <h6>总价：-，优惠：-</h6>
                 </div>
-                <div class="block-btn-col">
+                <div class="block-btn-col" id="btnToCash" >
                     <h4>去结算</h4><span>共-件</span>
                 </div>
                 <div class="btn-col" style="display:none;">                    
-                    <button id="btnToCash" class="weui-btn weui-btn_mini weui-btn_warn">删除</button>
+                    <button id="btnClear" class="weui-btn weui-btn_mini weui-btn_warn">删除</button>
                 </div>
             </div>
         </div>       

@@ -9,6 +9,7 @@ namespace Seascape.Model.WebView
     {
         public string unitName { get; set; }
         public List<UnitList> unitList { get; set; }
+        public List<ItemList> itemList { get; set; }
     }
 
     public class UnitList

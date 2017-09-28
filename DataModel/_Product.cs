@@ -204,6 +204,27 @@ namespace Seascape.Data
             return p;
         }
 
+        public string GetProductName(int id)
+        {
+            string pName = "";
+
+            string sql = "select * from t_product where id = " + id;
+            try
+            {
+                using (DataTable dt = helper.GetDataTable(sql))
+                {
+                    if (dt != null && dt.Rows.Count > 0)
+                    {
+                        pName = dt.Rows[0]["pName"].ToString();
+                    }
+                }
+            }
+            catch
+            {
+            }
+            return pName;
+        }
+
         public int CheckProduct(int cId, string pName)
         {
             int p = 0;

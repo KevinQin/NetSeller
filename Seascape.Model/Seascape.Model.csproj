@@ -72,6 +72,7 @@
     <Compile Include="user.cs" />
     <Compile Include="View\classInfo.cs" />
     <Compile Include="View\custom.cs" />
+    <Compile Include="View\evaluateInfo.cs" />
     <Compile Include="View\fxCount.cs" />
     <Compile Include="View\itemInfo.cs" />
     <Compile Include="View\orderInfo.cs" />

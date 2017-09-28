@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Data;
+using Seascape.Data.WebView;
 using Seascape.Model;
+using Seascape.Model.View;
 using Seascape.Model.WebView;
 
 namespace Seascape.Data
@@ -54,6 +56,59 @@ namespace Seascape.Data
             }
             radio = tradio;
             return lp;
+        }
+
+        public List<evaluateInfo> GetEvaluateList(string sql, string sql_c, out int Count)
+        {
+            List<evaluateInfo> la = new List<evaluateInfo>();
+
+            int LogCount = 1;
+            try
+            {
+                LogCount = Convert.ToInt32(helper.GetOne(sql_c));
+            }
+            catch
+            {
+                LogCount = 1;
+            }
+            Count = LogCount;
+
+            using (DataTable dt = helper.GetDataTable(sql))
+            {
+                if (dt != null && dt.Rows.Count > 0)
+                {
+                    foreach (DataRow r in dt.Rows)
+                    {
+                        try
+                        {
+                            evaluateInfo b = new evaluateInfo
+                            {
+                                id = Convert.ToInt32(r["id"]),
+                                enable = Convert.ToInt16(r["enable"]),
+                                grade = Convert.ToInt16(r["grade"]),
+                                memo = r["memo"].ToString(),
+                                orderNo = r["orderNo"].ToString(),
+                                addOn = Convert.ToDateTime(r["addON"]),
+                                uid = Convert.ToInt32(r["uid"]),
+                                pid = Convert.ToInt32(r["pid"])                                 
+                            };
+
+                            user user = new _User().GetUser("", "", b.uid);
+                            b.user = user;
+
+                            List<attach> attach = new _Attach().GetAttachList(b.orderNo, b.pid);
+                            b.attach = attach;
+
+                            b.pName = new _Product().GetProductName(b.pid);
+                            
+                            la.Add(b);
+                        }
+                        catch { }
+
+                    }
+                }
+            }
+            return la;
         }
 
 

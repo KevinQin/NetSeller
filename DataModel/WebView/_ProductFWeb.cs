@@ -35,8 +35,19 @@ namespace Seascape.Data.WebView
                                 pName = r["pName"].ToString(),
                                 desp = r["desp"].ToString(),
                                 price = Math.Round(Convert.ToDouble(r["price"]), 2),
+                                unitNo = "",
+                                unitName = ""
                             };
-                            //只返回一张
+                            List<unit> unit = new _Unit().GetUnitList(p.id);
+                            foreach (unit item in unit)
+                            {
+                                if (item.price == p.price)
+                                {
+                                    p.unitNo = item.unitNo;
+                                    p.unitName = item.fName + item.sName;
+                                    break;
+                                }
+                            }
                             ld.Add(p);
                         }
                     }
@@ -96,39 +107,61 @@ namespace Seascape.Data.WebView
                             Dictionary<string, int> Dic = new Dictionary<string, int>();
                             if (lu.Count > 0)
                             {
-                                unit.unitName = lu[0].fValue;
-                                List<UnitList> unitList = new List<UnitList>();
-                                foreach (UnitInfo units in lu)
+                                if (lu[0].sID == 0)
                                 {
-                                    if (!Dic.ContainsKey(units.fName))
+                                    unit.unitName = lu[0].fValue;
+                                    List<ItemList> itemList = new List<ItemList>();
+                                    foreach (UnitInfo uniti in lu)
                                     {
-                                        UnitList ulist = new UnitList
+                                        ItemList item = new ItemList
                                         {
-                                            unitValue = units.fName
+                                            unitValue = uniti.fValue,
+                                            itemName = uniti.fName,
+                                            price = uniti.price,
+                                            mPrice = uniti.mPrice,
+                                            unitNo = uniti.unitNo,
+                                            uNum = uniti.uNum
                                         };
-                                        List<ItemList> itemList = new List<ItemList>();
-                                        foreach (UnitInfo uniti in lu)
-                                        {
-                                            if (uniti.fName == ulist.unitValue)
-                                            {
-                                                ItemList item = new ItemList
-                                                {
-                                                    unitValue = uniti.sValue,
-                                                    itemName = uniti.sName,
-                                                    price = uniti.price,
-                                                    mPrice = uniti.mPrice,
-                                                    unitNo = uniti.unitNo,
-                                                    uNum = uniti.uNum
-                                                };
-                                                itemList.Add(item);
-                                            }
-                                        }
-                                        ulist.itemList = itemList;
-                                        Dic.Add(ulist.unitValue, 1);
-                                        unitList.Add(ulist);
+                                        itemList.Add(item);
                                     }
+                                    unit.itemList = itemList;
                                 }
-                                unit.unitList = unitList;                                
+                                else
+                                {
+                                    unit.unitName = lu[0].fValue;
+                                    List<UnitList> unitList = new List<UnitList>();
+                                    foreach (UnitInfo units in lu)
+                                    {
+                                        if (!Dic.ContainsKey(units.fName))
+                                        {
+                                            UnitList ulist = new UnitList
+                                            {
+                                                unitValue = units.fName
+                                            };
+                                            List<ItemList> itemList = new List<ItemList>();
+                                            foreach (UnitInfo uniti in lu)
+                                            {
+                                                if (uniti.fName == ulist.unitValue)
+                                                {
+                                                    ItemList item = new ItemList
+                                                    {
+                                                        unitValue = uniti.sValue,
+                                                        itemName = uniti.sName,
+                                                        price = uniti.price,
+                                                        mPrice = uniti.mPrice,
+                                                        unitNo = uniti.unitNo,
+                                                        uNum = uniti.uNum
+                                                    };
+                                                    itemList.Add(item);
+                                                }
+                                            }
+                                            ulist.itemList = itemList;
+                                            Dic.Add(ulist.unitValue, 1);
+                                            unitList.Add(ulist);
+                                        }
+                                    }
+                                    unit.unitList = unitList;  
+                                }                             
                             }
 
                             //运费方案

@@ -13,5 +13,7 @@ namespace Seascape.Model.WebView
         public Double mPrice { get; set; }
         public string desp { get; set; }
         public string imgUrl { get; set; }
+        public string unitNo { get; set; }
+        public string unitName { get; set; }
     }
 }

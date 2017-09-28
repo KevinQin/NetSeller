@@ -28,12 +28,12 @@ function initWeChat(config) {
     });
 }
 
-function preShare(id) {
+function preShare() {
     var obj = {
-        title: '万品微店，欢迎预订！',
-        desp: '万品微店，欢迎预订！',
-        link: "http://hjhk.edmp.cc/app/hotel/share.html",
-        logo: "http://hjhk.edmp.cc/img/logo.jpg",
+        title: '你的朋友向你推荐了万品微店',
+        desp: '你的朋友向你推荐了万品微店',
+        link: BASE_URL+ "app/index.aspx?sopid=" + __SOPID,
+        logo: BASE_URL+ "app/images/sharelog.jpg",
         success: function () { },
         cancel: function () { }
     };
@@ -41,13 +41,16 @@ function preShare(id) {
 }  
 
 function wechatConfigSuccess() {
-    /*if (PageName == "conformpay")
+    if (PageName == "conformpay")
     {
         setTimeout(pay.preDopay, 50);
-    } */
-    if (PageName == "index") {
-        setTimeout(IndexPage.getLocation, 50);
-        setTimeout(preShare, 50);
+    }
+    if (PageName == "detail") {
+        setTimeout(DetailPage.preShare, 2000);
+    }else if (PageName == "list") {
+        setTimeout(ListPage.preShare, 2000);
+    }else {
+        setTimeout(preShare, 2000);
     }
 }
 
