@@ -121,6 +121,42 @@ public class HbCreate
         return ResultPath;
     }
 
+    /// <summary>
+    /// 生成海报
+    /// </summary>
+    /// <param name="c"></param>
+    /// <returns></returns>
+    public string CreateHBForUser(HttpContext c, int uid, int hbId,int[] size,string imgUrl)
+    {
+        //int[] size = new int[4] { 386, 681, 128, 128 };
+        string MbPath = c.Server.MapPath(imgUrl);
+        string CodePath = CreateQrcode(uid.ToString() + "_" + hbId, c, 1);
+        string ResultPath = c.Server.MapPath("/pic/hb/" + hbId + "/" + uid.ToString() + ".jpg");
+
+        if (File.Exists(ResultPath))
+        {
+            return ResultPath;
+        }
+
+        if (System.IO.Directory.Exists(c.Server.MapPath("/pic/hb/" + hbId)) == false)
+        {
+            System.IO.Directory.CreateDirectory(c.Server.MapPath("/pic/hb/" + hbId));
+        }
+
+        System.Drawing.Image imgBack = System.Drawing.Image.FromFile(MbPath);
+        System.Drawing.Image imgc = System.Drawing.Image.FromFile(CodePath);
+
+        //从指定的System.Drawing.Image创建新的System.Drawing.Graphics      
+        System.Drawing.Bitmap bmp = new System.Drawing.Bitmap(imgBack.Width, imgBack.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+        System.Drawing.Graphics g = System.Drawing.Graphics.FromImage(bmp);
+
+        g.DrawImage(imgBack, 0, 0);
+        g.DrawImage(imgc, size[0], size[1], size[2], size[3]);
+
+        bmp.Save(ResultPath, System.Drawing.Imaging.ImageFormat.Jpeg);
+        return ResultPath;
+    }
+
     public string DoGetImage(HttpContext c, string photo, int uid)
     {
         string path = c.Server.MapPath("/qrcode/userPic/" + uid + ".jpg");

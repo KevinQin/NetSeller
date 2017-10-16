@@ -5,6 +5,7 @@ using System.Text;
 using System.Data;
 using Seascape.Model;
 using Seascape.Model.View;
+using Seascape.Model.WebView;
 
 namespace Seascape.Data
 {
@@ -76,6 +77,35 @@ namespace Seascape.Data
                         {
                             a.sValue = Dic[a.sID].itemName;
                         }
+                        la.Add(a);
+                    }
+                }
+            }
+            return la;
+        }
+
+        public List<UnitPrice> GetUnitPriceList(string unitNos)
+        {
+            if (unitNos.EndsWith(","))
+            {
+                unitNos = unitNos.Substring(0, unitNos.Length - 1);
+            }
+            unitNos = unitNos.Replace(",", "','");
+            List<UnitPrice> la = new List<UnitPrice>();
+            string sql = "select * from t_unit where unitNo in('" + unitNos + "') and pid in(select id from t_product where enable = 0 and state = 1)";
+            using (DataTable dt = helper.GetDataTable(sql))
+            {
+                if (dt != null && dt.Rows.Count > 0)
+                {
+                    foreach (DataRow r in dt.Rows)
+                    {
+                        UnitPrice a = new UnitPrice
+                        {
+                            price = Convert.ToDouble(r["price"]),
+                            uNum = Convert.ToInt16(r["uNum"]),
+                            unitNo = r["unitNo"].ToString(),
+                        };
+
                         la.Add(a);
                     }
                 }

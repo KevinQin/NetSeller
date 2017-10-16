@@ -572,11 +572,13 @@ namespace Seascape.Data
                             {
                                 o.lp = lp;
                             }
-                            List<attach> la = new _Attach().GetAttachList(o.orderNo, 0);
+                            /*
+                            List<attach> la = new _Attach().GetAttachList(o.orderNo, 0,"",0);
                             if (la != null && la.Count > 0)
                             {
                                 o.la = la;
                             }
+                            */ 
                             o.user = new _User().GetUser("", "", o.userId);
                         }
                         catch

@@ -15,7 +15,7 @@ namespace Seascape.Model
         /// </summary>
         public int orderNum { get; set; }
         /// <summary>
-        /// 花店数
+        /// VIP会员数
         /// </summary>
         public int flowerNum { get; set; }
         /// <summary>

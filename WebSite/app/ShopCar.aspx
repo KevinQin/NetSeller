@@ -31,7 +31,7 @@
                 <div class="check-col weui-cells_checkbox">
                     <label class="weui-cell weui-check__label" for="chkAll">
                         <div class="weui-cell__hd">
-                            <input type="checkbox" checked="checked" name="chkAll" class="weui-check" id="chkAll">
+                            <input type="checkbox" checked="checked" name="chkAll" class="weui-check" id="chkAll"/>
                             <i class="weui-icon-checked"></i>
                         </div>
                         <div class="weui-cell__bd">
@@ -39,11 +39,11 @@
                         </div>
                     </label>
                 </div>
-                <div class="price-info-col">
+                <div class="price-info-col" style="padding-top:.8rem;">
                     <span>应付：</span><em>-</em>
-                    <h6>总价：-，优惠：-</h6>
+                    <h6 style="display:none;">总价：-，优惠：-</h6>
                 </div>
-                <div class="block-btn-col" id="btnToCash" >
+                <div class="block-btn-col"  id="btnToCash" >
                     <h4>去结算</h4><span>共-件</span>
                 </div>
                 <div class="btn-col" style="display:none;">                    

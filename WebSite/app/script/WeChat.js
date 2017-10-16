@@ -41,14 +41,16 @@ function preShare() {
 }  
 
 function wechatConfigSuccess() {
-    if (PageName == "conformpay")
+    if (PageName == "pay")
     {
-        setTimeout(pay.preDopay, 50);
+        setTimeout(PayPage.preDopay, 50);
     }
-    if (PageName == "detail") {
+    else if (PageName == "detail") {
         setTimeout(DetailPage.preShare, 2000);
     }else if (PageName == "list") {
         setTimeout(ListPage.preShare, 2000);
+    }else if (PageName == "shareproduct") {
+        setTimeout(ShareProdcut.wxConfig_cb,1000);
     }else {
         setTimeout(preShare, 2000);
     }
@@ -107,36 +109,40 @@ function WxDoPay(sucCallBack, failCallBack) {
     });   
 }
 
-
-//Wechat调用
-function chooseImage(res) {
-    var localIds = res.localIds;
-    ReportPage.picUrl = localIds;
-    $(".input:eq(2) span").text("已选你喜欢的照片");
-}
-
 var serverIds = [];
+var picLength = 0;
+var $Imgs = [];
 var upoverCallBack = null;
 function uploadImage(callback) {
     upoverCallBack = callback;
-    updateImageToWeChat();
+    picLength = $(".img-col img").length;
+    if (picLength == 0) {
+        upoverCallBack();
+    }
+    else {
+        var imgs = $(".img-col img");
+        $(imgs).each(function (i,_o) {
+            $Imgs.push($(_o).attr("src"));
+        });
+        updateImageToWeChat();
+    }
 }
 
 function updateImageToWeChat() {
-    try {
-        var localId = ReportPage.picUrl.toString();
-        //alert(localId);
-        wx.uploadImage({
-            localId: localId,
-            isShowProgressTips: 1,
-            success: function (res) {
-                var serverId = res.serverId;
-                //alert(serverId);
-                upoverCallBack(serverId);
+    var localId = $Imgs.pop();
+    wx.uploadImage({
+        localId: localId,
+        isShowProgressTips: 1,
+        success: function (res) {
+            var serverId = res.serverId;
+            serverIds.push(serverId);            
+            if ($Imgs.length == 0) {
+                var seridstr = serverIds.join("|");
+                upoverCallBack(seridstr);
             }
-        });
-    } catch (ex) {
-       // alert(ex);
-    }
-   
+            else {
+                updateImageToWeChat();
+            }
+        }
+    });
 }

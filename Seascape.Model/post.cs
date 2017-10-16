@@ -11,5 +11,7 @@ namespace Seascape.Model
         public string postName { get; set; }
         public string provice { get; set; }
         public int enable { get; set; }
+        public Double postFee { get; set; }
+        public int postType { get; set; }
     }
 }

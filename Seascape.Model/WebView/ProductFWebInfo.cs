@@ -16,8 +16,11 @@ namespace Seascape.Model.WebView
         public string pInfo { get; set; }
         public List<string> imgUrl { get; set; }
         public UnitFWeb unit { get; set; }
+        /*
         public int postType { get; set; }
         public Double postFee { get; set; }
+        public int postFeeType { get; set; }
         public List<ProductPostForWeb> post { get; set; }
+        */ 
     }
 }

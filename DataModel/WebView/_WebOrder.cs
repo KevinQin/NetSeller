@@ -15,10 +15,10 @@ namespace Seascape.Data.WebView
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
-        public List<WebOrderList> GetOrderList(int uid)
+        public List<WebOrderList> GetOrderList(string sql,int uid)
         {
             List<WebOrderList> lo = new List<WebOrderList>();
-            string sql = "select * from t_order where userId = " + uid + " order by id asc";
+            
             using (DataTable dt = helper.GetDataTable(sql))
             {
                 if (dt != null && dt.Rows.Count > 0)
@@ -49,7 +49,10 @@ namespace Seascape.Data.WebView
                                         WebOrderProduct wp = new WebOrderProduct
                                         {
                                             pName = item.pName,
+                                            id = item.pid,
                                             pNum = item.pNum,
+                                            unitNo = item.unitNo,
+                                            price = item.price,
                                             imgUrl = ""
                                         };
                                         if (imgDic.ContainsKey(item.pid))
@@ -59,6 +62,7 @@ namespace Seascape.Data.WebView
                                                 wp.imgUrl = imgDic[item.pid].Split('@')[0];
                                             }
                                         }
+                                        wp.unitInfo = new _Unit().GetUnitItem(item.unitNo);
                                         p.Add(wp);
                                     }
                                 }
@@ -82,7 +86,7 @@ namespace Seascape.Data.WebView
         public Dictionary<int, string> GetProductImg()
         {
             Dictionary<int, string> lc = new Dictionary<int, string>();
-            string sql = "select id,imgUlr from t_product";
+            string sql = "select id,imgUrl from t_product";
             try
             {
                 using (DataTable dt = helper.GetDataTable(sql))
@@ -127,7 +131,9 @@ namespace Seascape.Data.WebView
                                 price = Math.Round(Convert.ToDouble(r["price"]), 2),
                                 pid = Convert.ToInt16(r["pid"]),
                                 pNum = Convert.ToInt16(r["pNum"]),
-                                pName = r["pName"].ToString()
+                                pName = r["pName"].ToString(),
+                                unitNo = r["unitNo"].ToString(),
+                                isEvaluate = Convert.ToInt16(r["isEvaluate"])
                             };
                             lc.Add(b);
                         }
@@ -157,7 +163,6 @@ namespace Seascape.Data.WebView
                     List<orderPList> lp = GetOrderProduct(0, orderNo);
                     DataRow r = dt.Rows[0];
                     {
-                        WebOrderList o = null;
                         try
                         {
                             w = new WebOrderInfo
@@ -182,14 +187,18 @@ namespace Seascape.Data.WebView
                             {
                                 foreach (orderPList item in lp)
                                 {
-                                    if (item.orderNo == o.orderNo)
+                                    if (item.orderNo == w.orderNo)
                                     {
                                         WebOrderProduct wp = new WebOrderProduct
                                         {
+                                            id = item.pid,
                                             pName = item.pName,
                                             pNum = item.pNum,
                                             imgUrl = "",
-                                            unitInfo = ""
+                                            unitInfo = "",
+                                            unitNo = item.unitNo,
+                                            price = item.price,
+                                            isEvaluate = 0
                                         };
                                         if (imgDic.ContainsKey(item.pid))
                                         {
@@ -198,14 +207,15 @@ namespace Seascape.Data.WebView
                                                 wp.imgUrl = imgDic[item.pid].Split('@')[0];
                                             }
                                         }
+                                        wp.isEvaluate = item.isEvaluate;
                                         wp.unitInfo = new _Unit().GetUnitItem(item.unitNo);
                                         p.Add(wp);
                                     }
                                 }
                             }
-                            o.product = p;
+                            w.product = p;
                             //日志列表
-                            List<log> log = new _Log().GetLogList(o.orderNo);
+                            List<log> log = new _Log().GetLogList(w.orderNo);
                             if (log != null && log.Count > 0)
                             {
                                 w.log = log;

@@ -15,13 +15,13 @@ namespace Seascape.Data
         /// <param name="OrderNo"></param>
         /// <param name="Pid"></param>
         /// <returns></returns>
-        public List<attach> GetAttachList(string OrderNo, int Pid)
+        public List<attach> GetAttachList(string OrderNo, int Pid,string unitNo,int uid)
         {
             List<attach> la = new List<attach>();
-            string sql = "select * from t_attach where orderNo = '" + OrderNo + "' order by id asc";
-            if (Pid > 0)
+            string sql = "select * from t_attach where orderNo = '" + OrderNo + "' and unitNo = '" + unitNo + "' order by id asc";
+            if (OrderNo.Length == 0)
             {
-                sql = "select * from t_attach where pid = " + Pid + " order by descNum asc";
+                sql = "select * from t_attach where pid = " + Pid + " and uid = " + uid + " order by descNum asc";
             }
             using (DataTable dt = helper.GetDataTable(sql))
             {

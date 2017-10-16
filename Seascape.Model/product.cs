@@ -26,5 +26,6 @@ namespace Seascape.Model
         public int isHot { get; set; }
         public int postType { get; set; }
         public Double postFee { get; set; }
+        public int postFeeType { get; set; }
     }
 }

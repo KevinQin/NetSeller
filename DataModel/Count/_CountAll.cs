@@ -54,7 +54,7 @@ namespace Seascape.Data
                 c.orderNum = Convert.ToInt16(helper.GetOne("SELECT count(id) as t from t_order where date(addOn) = '" + Date + "' and state < 9 " + keyWord));
                 //产品件数
                 c.productNum = Convert.ToInt16(helper.GetOne("Select sum(pNum) as p from t_orderPlist where orderNo in(SELECT orderNo from t_order where date(addOn) = '" + Date + "' and state < 9 " + keyWord + ") and enable = 0"));
-                //花店数
+                //VIP会员数
                 c.flowerNum = Convert.ToInt16(helper.GetOne("SELECT count(distinct fid) as t from t_order where date(addOn) = '" + Date + "' and state < 9 " + keyWord));
                 c.newF = Convert.ToInt16(helper.GetOne("SELECT count(id) as t from t_flower where date(addOn) = '" + Date + "' and enable = 0 " + keyWord));
                 //金额总计

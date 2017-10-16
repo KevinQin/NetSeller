@@ -13,5 +13,6 @@ namespace Seascape.Model.WebView
         public string memo { get; set; }
         public string nickName { get; set; }
         public string photoUrl { get; set; }
+        public List<attach> attach { get; set; }
     }
 }

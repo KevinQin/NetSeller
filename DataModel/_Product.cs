@@ -111,6 +111,7 @@ namespace Seascape.Data
                                 sign = r["sign"].ToString(),
                                 pId = Convert.ToInt16(r["pId"]),
                                 postType = Convert.ToInt16(r["postType"]),
+                                postFeeType = Convert.ToInt16(r["postFeeType"]),
                                 postFee = Convert.ToDouble(r["postFee"])
                             };
                             p.signInfo = new _Sign().GetSign(p.sign);
@@ -171,6 +172,7 @@ namespace Seascape.Data
                                 sign = r["sign"].ToString(),
                                 pId = Convert.ToInt16(r["pId"]),
                                 postType = Convert.ToInt16(r["postType"]),
+                                postFeeType = Convert.ToInt16(r["postFeeType"]),
                                 postFee = Convert.ToDouble(r["postFee"])
                             };
                             if (DicNum.ContainsKey(p.id))

@@ -54,6 +54,7 @@ namespace Seascape.Data
                             adId = Convert.ToInt32(r["adId"]),
                             uType = Convert.ToInt32(r["uType"]),
                             balance = Convert.ToDouble(r["balance"]),
+                            isSubscribe = Convert.ToInt16(r["isSubscribe"]),
                             sourceId = Convert.ToInt32(r["sourceId"].ToString())
                         };
                     }
@@ -89,6 +90,7 @@ namespace Seascape.Data
                             adId = Convert.ToInt32(r["adId"]),
                             uType = Convert.ToInt32(r["uType"]),
                             balance = Convert.ToDouble(r["balance"]),
+                            isSubscribe = Convert.ToInt16(r["isSubscribe"]),
                             sourceId = Convert.ToInt32(r["sourceId"].ToString())
                         };
                     }
@@ -133,6 +135,7 @@ namespace Seascape.Data
                                 adId = Convert.ToInt32(r["adId"]),
                                 uType = Convert.ToInt32(r["uType"]),
                                 balance = Convert.ToDouble(r["balance"]),
+                                isSubscribe = Convert.ToInt16(r["isSubscribe"]),
                                 sourceId = Convert.ToInt32(r["sourceId"].ToString())
                             };
                             lu.Add(u);
@@ -182,6 +185,7 @@ namespace Seascape.Data
                                 adId = Convert.ToInt32(r["adId"]),
                                 uType = Convert.ToInt32(r["uType"]),
                                 balance = Convert.ToDouble(r["balance"]),
+                                isSubscribe = Convert.ToInt16(r["isSubscribe"]),
                                 sourceId = Convert.ToInt32(r["sourceId"].ToString())
                             };
                             if (sqlid.Length > 0 && Dic.ContainsKey(u.id))
@@ -208,7 +212,7 @@ namespace Seascape.Data
 
         public List<user> GetUserForMobile(int uid)
         {
-            string sql = "select * from t_user where source = " + uid + " order by addOn desc";
+            string sql = "select * from t_user where sourceId = " + uid + " order by addOn desc";
             List<user> lu = new List<user>();
             try
             {
@@ -233,6 +237,7 @@ namespace Seascape.Data
                                 adId = Convert.ToInt32(r["adId"]),
                                 uType = Convert.ToInt32(r["uType"]),
                                 balance = Convert.ToDouble(r["balance"]),
+                                isSubscribe = Convert.ToInt16(r["isSubscribe"]),
                                 sourceId = Convert.ToInt32(r["sourceId"].ToString())
                             };
                             lu.Add(u);

@@ -17,5 +17,6 @@ namespace Seascape.Model
         public int enable { get; set; }
         public int pNum { get; set; }
         public string unitNo { get; set; }
+        public int isEvaluate { get; set; }
     }
 }

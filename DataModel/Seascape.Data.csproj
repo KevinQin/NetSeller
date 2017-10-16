@@ -62,6 +62,7 @@
     <Compile Include="Tmessage\TMsg_Grade.cs" />
     <Compile Include="WebView\_ProductFWeb.cs" />
     <Compile Include="WebView\_WebOrder.cs" />
+    <Compile Include="WebView\_WebUser.cs" />
     <Compile Include="_Addr.cs" />
     <Compile Include="Admin\_AdminLimit.cs" />
     <Compile Include="Admin\_AdminLog.cs" />
@@ -73,6 +74,7 @@
     <Compile Include="Count\_CountAll.cs" />
     <Compile Include="Finance\_Finance.cs" />
     <Compile Include="_Coin.cs" />
+    <Compile Include="_Content.cs" />
     <Compile Include="_Item.cs" />
     <Compile Include="_Log.cs" />
     <Compile Include="_Complaint.cs" />

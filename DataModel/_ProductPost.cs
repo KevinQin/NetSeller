@@ -60,7 +60,8 @@ namespace Seascape.Data
                         };
                         if (Dic.ContainsKey(Convert.ToInt16(r["postID"])))
                         {
-                            a.provice = new _Post().GetProvice(Dic[Convert.ToInt16(r["postID"])]);
+                            //a.provice = new _Post().GetProvice(Dic[Convert.ToInt16(r["postID"])]);
+                            a.provice = Dic[Convert.ToInt16(r["postID"])];
                         }
 
                         la.Add(a);

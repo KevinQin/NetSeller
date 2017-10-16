@@ -19,9 +19,13 @@ namespace Seascape.Model.WebView
 
     public class WebOrderProduct
     {
+        public int id { get; set; }
         public string pName { get; set; }
         public string imgUrl { get; set; }
         public int pNum { get; set; }
         public string unitInfo { get; set; }
+        public int isEvaluate { get; set; }
+        public string unitNo { get; set; }
+        public Double price { get; set; }
     }
 }

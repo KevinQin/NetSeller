@@ -16,5 +16,6 @@ namespace Seascape.Model
         public string memo { get; set; }
         public int uid { get; set; }
         public int pid { get; set; }
+        public string unitNo { get; set; }
     }
 }

@@ -17,6 +17,7 @@ namespace Seascape.Model
         /// 产品ID
         /// </summary>
         public int pid { get; set; }
+        public string unitNo { get; set; }
         /// <summary>
         /// 附件类型
         /// </summary>

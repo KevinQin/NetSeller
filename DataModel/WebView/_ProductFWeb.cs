@@ -84,9 +84,12 @@ namespace Seascape.Data.WebView
                                 desp = r["desp"].ToString(),
                                 pInfo = r["pInfo"].ToString(),
                                 storeNum = Convert.ToInt32(r["storeNum"]),
-                                price = Math.Round(Convert.ToDouble(r["price"]), 2),
+                                price = Math.Round(Convert.ToDouble(r["price"]), 2)
+                                /*
                                 postType = Convert.ToInt16(r["postType"]),
+                                postFeeType = Convert.ToInt16(r["postFeeType"]),
                                 postFee = Convert.ToDouble(r["postFee"])
+                                */ 
                             };
                             
                             //图片列表
@@ -165,12 +168,13 @@ namespace Seascape.Data.WebView
                             }
 
                             //运费方案
+                            /*
                             if (p.postType == 2)
                             {
                                 List<ProductPostForWeb> post = new _ProductPost().GetProductPostForWebList(p.id);
                                 p.post = post;
                             }
-
+                            */
                             p.unit = unit;
                         }
                     }
@@ -180,6 +184,47 @@ namespace Seascape.Data.WebView
             {
             }
             return p;
+        }
+
+        /// <summary>
+        /// 获取运费方案
+        /// </summary>
+        /// <param name="pids"></param>
+        /// <returns></returns>
+        public List<postForWeb> GetPostInfo(string pids)
+        {
+            List<postForWeb> la = new List<postForWeb>();
+            string sql = "select * from t_product where id in(" + pids + ")";
+            try
+            {
+                using (DataTable dt = helper.GetDataTable(sql))
+                {
+                    if (dt != null && dt.Rows.Count > 0)
+                    {
+                        foreach (DataRow r in dt.Rows)
+                        {
+                            postForWeb p = new postForWeb
+                            {
+                                pid = Convert.ToInt32(r["id"]),
+                                postType = Convert.ToInt16(r["postType"]),
+                                postFeeType = Convert.ToInt16(r["postFeeType"]),
+                                postFee = Convert.ToDouble(r["postFee"])
+                            };
+                           
+                            if (p.postType == 2)
+                            {
+                                List<ProductPostForWeb> post = new _ProductPost().GetProductPostForWebList(p.pid);
+                                p.post = post;
+                            }
+                            la.Add(p);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+            }
+            return la;
         }
     }
 }

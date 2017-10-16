@@ -71,7 +71,14 @@ namespace Seascape.Data
                     {
                         foreach (DataRow r in dt.Rows)
                         {
-                            post a = new post { id = Convert.ToInt16(r["id"]), postName = r["postName"].ToString(), provice = r["provice"].ToString() };
+                            post a = new post
+                            {
+                                id = Convert.ToInt16(r["id"]),
+                                postName = r["postName"].ToString(),
+                                provice = r["provice"].ToString(),
+                                postFee = Convert.ToDouble(r["postFee"]),
+                                postType = Convert.ToInt16(r["postType"])
+                            };
                             la.Add(a);
                         }
                     }

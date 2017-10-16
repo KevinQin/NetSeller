@@ -8,9 +8,10 @@ var cookie_before = "wpshopV1_";
 var __SOPID = "";
 
 SSJ.init = function () {
-    var pageUrl = window.location.href;
-    var pageItems = pageUrl.split("/");
+    var pageUrl = window.location.href;    
+    var pageItems = pageUrl.split("?")[0].split("/");
     PageName = pageItems[pageItems.length - 1].split('.')[0].toLowerCase();
+    var PageExtName = pageItems[pageItems.length - 1].split('.')[1].split("?")[0].toLowerCase();
     __SOPID = request("sopid");
     if (__SOPID == null || typeof (__SOPID) == 'undefined'){ __SOPID = "_"; }
     if (PageName === "index" || PageName === "") {
@@ -25,6 +26,7 @@ SSJ.init = function () {
         ShopCarPage.init();
     }
     else if (PageName == "uc") {
+        UcPage.init();
         addTabBar();
     }
     else if (PageName == "list") {
@@ -33,30 +35,985 @@ SSJ.init = function () {
     else if (PageName == "detail") {
         DetailPage.init();
     }
-    else if (PageName == "conform") {
-
+    else if (PageName == "cash") {
+        CashPage.init();
     }
     else if (PageName == "pay") {
-
+        PayPage.init();
     }
     else if (PageName == "success") {
- 
+
     }
     else if (PageName == "orderlist") {
-       
+        OrderList.init();
     }
     else if (PageName == "orderdetail") {
-        
+        OrderDetail.init();
+    }
+    else if (PageName == "shareorder") {
+        ShareOrder.init();
+    }
+    else if (PageName == "shareproduct") {
+        ShareProdcut.init();
+    }
+    else if (PageName == "comment") {
+        CommentPage.init();
+    }
+    if (PageExtName == "aspx") {
+        DoWeChatConfig();
     }
 }
+
+var CommentPage = {
+    PageNo: 1,
+    init: function () {
+        CommentPage.loadComment();
+        CommentPage.loadProduct();
+    },
+    loadProduct: function () {
+        $ajax({ fn: 106, pid: request("pid") }, CommentPage.loadProduct_cb, true);
+    },
+    loadProduct_cb: function (o) {
+        if (o.Return == 0) {
+            $(".point-col h4").text(o.data.pName);
+            if (o.data.imgUrl.length > 0) {
+                $("#imgPro").attr("src", BASE_URL + o.data.imgUrl[0]);
+            }
+        }
+    },
+    loadComment: function () {
+        $ajax({ fn: 12, pid: request("pid"), uid: $get("userid"), openid: $get("openid"), pageno: CommentPage.PageNo }, CommentPage.loadComment_cb, true);
+    },
+    loadComment_cb: function (o) {
+        if (o.Return == 0) {
+            $("h5 em").text(o.Ext + "%");
+            if ($(".weui-loadmore").length > 0) {
+                $(".weui-loadmore").remove();
+            }
+            var isHasUl = $("ul").length > 0;
+            if (o.Return == 0 && o.data.length > 0) { 
+                var html = "";
+                if (!isHasUl) { html += "<ul>"; }
+                $(o.data).each(function (i, _o) {                   
+                    html += '<li><div class="hd-col"><img src="' +  _o.photoUrl + '" /></div>';
+                    html += '<div class="bd-col"><div class="hd-bar"><div class="left-col"><h6>' + _o.nickName + '</h6>';
+                    for (var i = 0; i < _o.grade; i++) {
+                        html += '<i class="iconfont icon-favoritesfilling"></i>'
+                    }
+                    for (var i = _o.grade; i < 5; i++) {
+                        html += '<i class="iconfont icon-iconfontxingxing"></i>'
+                    }
+                    html += '</div><div class="right-col">' + new Date(_o.addOn).fmt("yyyy-MM-dd") + '</div></div>'
+                    html += '<div class="bd-bar"><p>' + _o.memo + '</p>'
+                    if (_o.attach.length > 0) {
+                        html += '<div class="img-table">'
+                        $(_o.attach).each(function (j, __o) {
+                            html += '<div class="img-col"><img src="' + BASE_URL + __o.aSrc + '"/></div>';
+                        });
+                        html += '</div>'
+                    }                    
+                    //图片
+                    html += '</div>'
+                    html += '<div class="ft-row"></div></li>';
+                    //商品规格名称及下单日期 $(".product-list ul").append(html);                   
+                });
+                if (!isHasUl) { html += "</ul>"; }
+                $(".comment-bd").append(html);
+                var _w = $(".img-col img").width();
+                $(".img-col img").css({ "height": _w + "px" });
+                $(".img-col img").on("click", CommentPage.priviewImg);
+                if (o.data.length >= 10) {                 
+                    CommentPage.PageNo++; 
+                    //还有更多
+                    var moreHtml = '<div class="weui-loadmore weui-loadmore_line"><span class="weui-loadmore__tips" >加载更多</span></div>';
+                    $(".comment-bd").append(moreHtml);
+                    $(".weui-loadmore__tips").on("click", CommentPage.loadComment);
+                }
+                else {
+                    //没有更多了
+                    var moreHtml = '<div class="weui-loadmore weui-loadmore_line"><span class="weui-loadmore__tips" >没有更多了</span></div>';
+                    $(".comment-bd").append(moreHtml);
+                }                
+            }
+            else {
+                var html = '<div style="margin-top:15rem;" class="weui-loadmore weui-loadmore_line"><span class="weui-loadmore__tips" >暂无产品，点击刷新</span></div>';
+                $(".product-list").append(html);
+                $(".weui-loadmore__tips").on("click", CommentPage.loadComment);
+            }
+        }
+    },
+    priviewImg: function () {
+        var currImg = $(this).attr("src");
+        var imgs = [];
+        $(this).parents(".img-table").find("img").each(function (i, _o) {
+            imgs.push($(_o).attr("src"));
+        });
+        imgBrower(currImg, imgs);
+    },
+};
+
+var UcPage = {
+    init: function () {
+        var photoUrl = $get('photourl');
+        if (photoUrl != null && photoUrl != "") {
+            $("img").attr("src", photoUrl);
+        }
+        var mobile = $get('mobile');
+        if (mobile != null && mobile != "") {
+            $("h5").text(mobile);
+        } 
+        var nickname = $get('nickname');
+        if (nickname != null && nickname != "") {
+            $("h4").text(nickname);
+        } 
+    }
+};
+
+var ShareProdcut = {
+    DATA: {},
+    isCommened: false,    
+    init: function () {
+        $("#imgPro").attr("src", BASE_URL + request("imgurl"));
+        ShareProdcut.loadComment();
+    },
+    wxConfig_cb: function () {
+        $("#btnCamera").click(function () {
+            wx.chooseImage({ success: ShareProdcut.chooseImage });
+        });
+        if (!ShareProdcut.isCommened) {
+            $("#btnCamera").show();
+            ShareProdcut.imgreSize();
+        }
+    },
+    imgreSize: function () {       
+        var _w = $(".img-col:first").width();
+        $(".img-col").css({ "height": _w + "px" });
+        $("#btnCamera i").css({ "line-height": _w + "px" });        
+    },
+    chooseImage: function (res) {
+        var localIds = res.localIds;
+         $(localIds).each(function (i, _o) {
+            if (_o.length < 10) { return; }
+            $("<div class='img-col'><img src='" + _o + "'/></div>").insertBefore($("#btnCamera"));
+        });  
+        ShareProdcut.imgreSize();
+    },
+    loadComment: function () {
+        $ajax({ fn: 12, pid: request("pid"), uid: $get("userid"), openid: $get("openid"), unitno: request("cid"), orderno: request("orderno") }, ShareProdcut.loadComment_cb, true);
+    },
+    loadComment_cb: function (o) {
+        if (o.Return == 0 && o.data.length > 0) { 
+            ShareProdcut.isCommened = true;
+            var obj = o.data[0];
+            $("textarea").hide();            
+            $(".content-area").append("<p>" + obj.memo+ "</p>");
+            for (var i = 0; i < obj.grade; i++) {
+                $(".point-items").append('<i class="iconfont icon-favoritesfilling"></i>')
+            }
+            for (var i = obj.grade; i < 5; i++) {
+                $(".point-items").append('<i class="iconfont icon-iconfontxingxing"></i>')
+            }
+            $(obj.attach).each(function (i, _o) {
+                if (_o.length < 10) { return; }
+                $("<div class='img-col'><img src='" + BASE_URL+ _o.aSrc + "'/></div>").insertBefore($("#btnCamera"));
+            });
+            $(".img-col img").on("click", ShareProdcut.priviewImg);
+            ShareProdcut.imgreSize();
+        }
+        else {    
+            $("#btnOK").show();
+            $("#btnOK").on("click", ShareProdcut.saveComment);
+            for (var i = 0; i < 5; i++)
+            {
+                $(".point-items").append('<i class="iconfont icon-favoritesfilling"></i>')
+            }
+            $(".point-items i").on("click", ShareProdcut.changeToStar);
+        }
+    },
+    priviewImg: function () {
+        var currImg = $(this).attr("src");
+        var imgs = [];
+        $(".img-col img").each(function (i, _o) {
+            imgs.push($(_o).attr("src"));
+        });
+        imgBrower(currImg, imgs);
+    },
+    changeToStar: function () {
+        var ind = $(this).parents(".point-items").children().index($(this))+1;
+        $(this).parents(".point-items").children("i").removeClass("icon-favoritesfilling").addClass("icon-iconfontxingxing");
+        $(this).parents(".point-items").children(":lt(" + ind + ")").removeClass("icon-iconfontxingxing").addClass("icon-favoritesfilling");
+    },
+    saveComment: function () {        
+        var isHasZone = false;
+        var stars_n = $("i.icon-favoritesfilling").length;        
+        if (stars_n==0) {
+            weui.alert("请点亮星星进行评分");
+            return;
+        }
+        var comment = $("#txtContent").val();
+        if (comment == "") { comment = "好评"; }
+        ShareProdcut.DATA = { fn: 11, aSrc: "", orderno: request("orderno"), unitno: request("cid"), pid: request("pid"), grade: stars_n, memo: comment, uid: $get("userid"),openid:$get("openid") };
+        uploadImage(ShareProdcut.SaveEvaluate);
+    },
+    SaveEvaluate: function (imgSerIds) {        
+        ShareProdcut.DATA.aSrc = imgSerIds;
+        $ajax(ShareProdcut.DATA, ShareProdcut.SaveEvaluate_cb, true);
+    },
+    SaveEvaluate_cb: function (o) {
+        if (o.Return == 0) {
+            weui.alert("评论成功", function () {
+                window.location.reload();
+            });
+        }
+    }
+};
+
+var ShareOrder = {
+    OrderNo:"",
+    init: function () {
+        ShareOrder.OrderNo = request("orderno");
+        ShareOrder.loadProduct();
+    },
+    loadProduct: function () {
+        $ajax({ fn: 105, orderno: ShareOrder.OrderNo, openid: $get("openid"), uid: $get("userid") }, ShareOrder.loadProduct_cb, true);
+    },
+    loadProduct_cb: function (o) {
+        //商品信息
+        var htm = "";
+        $(o.data.product).each(function (i, _o) {
+            htm = "<li>";
+            htm += '<div class="img-col"><img src="' + BASE_URL + _o.imgUrl + '"></div>';
+            htm += '<div class="info-col"><h4>' + _o.pName + "&nbsp;" + _o.unitInfo + '</h4>'
+            htm += '<div class="price-row"><em></em><div class="btn-col"><a href="ShareProduct.aspx?orderno=' + ShareOrder.OrderNo + '&imgurl=' + _o.imgUrl+'&pid=' + _o.id + '&cid=' + _o.unitNo + '" class="weui-btn weui-btn_mini weui-btn_plain-primary"> <i class="iconfont icon-iconfontshumajiadian"></i> 评价晒单</a></div></div>'
+            htm += "</div></li>";
+            $(".product-list ul").append(htm);
+        });
+        $(".product-list").show();
+    }
+};
+
+var OrderDetail = {
+    OrderNo: "",
+    DATA: {},
+    init: function () {
+        OrderDetail.OrderNo = request("orderno");
+        OrderDetail.GetOrderDetail();
+        $("#btnBuyAgain").on("click", OrderDetail.buyAgain);
+        $("#btnPay").on("click", OrderDetail.payOrder);
+        $("#btnCancel").on("click", OrderDetail.cancelOrder);
+        $("#btnConform").on("click", OrderDetail.conformGet);
+        $("#btnShare").on("click", OrderDetail.shareOrder);
+    },
+    GetOrderDetail: function () {
+        $ajax({ fn: 105, orderno: OrderDetail.OrderNo, openid: $get("openid"), uid: $get("userid") }, OrderDetail.GetOrderDetail_cb, true);
+    },
+    GetOrderDetail_cb: function (o) {
+        if (o.Return == 0) {
+            var stateInfo = "";
+            OrderDetail.DATA = o.data;
+            if (o.data.state == 0) {
+                $("#btnCancel").show();
+                stateInfo = '<i class="iconfont icon-iconfontriyongbaihuo"></i> 等待付款，请在23时05分内付款';
+                if (o.data.isPay == 0) { $("#btnPay").show(); }          
+            }           
+            else if (o.data.state == 1) {
+                stateInfo = '<i class="iconfont icon-similarproduct"></i> 商品正在出库';
+                $("#btnBuyAgain").show();
+            }
+            else if (o.data.state == 2) {
+                stateInfo = '<i class="iconfont icon-jiaoqibz"></i> 商品运输中，很快将送到你的身边';
+                $("#btnConform").show();
+            }
+            else if (o.data.state == 8) {
+                stateInfo = '<i class="iconfont icon-success1"></i> 完成，欢迎您再次光临！';
+                $("#btnShare").show();
+                $("#btnBuyAgain").show();
+                $("btnDelete").show();
+            }
+            else if (o.data.state == 9) {
+                stateInfo = '<i class="iconfont icon-prompt"></i> 订单已取消，欢迎您再次光临';
+                $("#btnBuyAgain").show();
+                $("btnDelete").show();
+            } 
+            else if (o.data.state == 10) {
+                stateInfo = '<i class="iconfont icon-success"></i> 退货完成，欢迎您再次光临！';
+                $("#btnBuyAgain").show();
+                $("btnDelete").show();
+            }
+            $(".state-bar").html(stateInfo);
+            if (o.data.state >= 8 && o.data.state <= 10) { $(".state-bar").addClass("state-bar-over"); }
+            $(".address-bar .info-col h4").text(o.data.contact + "　" +maskTel(o.data.tel));
+            $(".address-bar .info-col h6").text("地址：" + o.data.addr);
+            $(".address-bar .icon-col").show();
+            //商品信息
+            var htm = "";
+            $(o.data.product).each(function (i, _o) {
+                htm = "<li>";
+                htm += '<div class="img-col"><img src="' + BASE_URL + _o.imgUrl + '"></div>';
+                htm += '<div class="info-col"><h4>'+ _o.pName +'</h4><h6>数量:'+ _o.pNum +'&nbsp;规格:'+ _o.unitInfo +'</h6>'
+                htm += '<div class="price-row"><em>￥'+ _o.price +'</em><div class="btn-col"><button type= "button" data-cid="'+ _o.unitNo +'" name="btnAddShopCar" class="weui-btn weui-btn_mini weui-btn_plain-default">加购物车</button></div></div>'
+                htm += "</div></li>";
+                $(".product-list ul").append(htm);
+            });
+            $(".product-list").show();
+            //订单其它
+            $(".order-info").append("<p>订单编号：" + o.data.orderNo + "&nbsp;<button style='display:none;' type='button' id='btnCopyOrderNo' class='weui-btn weui-btn_mini weui-btn_plain-default'>复制</button><br/>下单时间：" + new Date(o.data.addOn).fmt("yyyy-MM-dd HH:mm:ss") + "</p>")
+            $(".order-info").append("<p>支付方式：微信支付</p>");
+            $(".order-info").append("<p>配送方式：XX快递<br/>快递单号：xxxxxxxxxx</p>");
+            $(".order-info").append("<p style='display:none;'>发票类型：电子发票<br/>发票抬头：个人<br/>发票内容：明细</p>");
+            //价格
+            $(".price-panel").append("<ul><li><h4>商品总额</h4><h5>￥" + (o.data.allPrice - o.data.postFee + o.data.subPrice).toFixed(2) + "</h5></li><li><h4>+运费</h4><h5>￥" + o.data.postFee.toFixed(2) + "</h5></li><li><h4>-金币</h4><h5>￥" + o.data.subPrice.toFixed(2) + "</h5></li></ul>");
+            $(".price-panel").append("<div class='total-row'>实付款：<em>￥" + o.data.allPrice.toFixed(2) + "</em></div>");
+            //日志
+            var htm="<h5>订单日志</h5><ul>"
+            $(o.data.log).each(function (i, _o) {
+                htm += "<li><h4>" + new Date(_o.addOn).fmt("yyyy-MM-dd HH:mm:ss") + "</h4>" + _o.content + "</li>";
+            });
+            htm += "</ul>";
+            $(".log-panel").append(htm);
+
+            $("button[name=btnAddShopCar]").on("click", OrderDetail.addToShopCar);
+            $("#btnCopyOrderNo").on("click", OrderDetail.copyOrderNo);
+
+        }
+        else {
+            weui.alert("获取订单信息出错，请稍候重试");
+        }
+    },
+    addToShopCar: function () {
+        var cid = $(this).attr("data-cid");
+        OrderDetail._buyAgain(cid, false, OrderDetail.DATA, OrderDetail.DATA.orderNo);
+    },
+    buyAgain: function () {
+        var cid = [];
+        $(OrderDetail.DATA.product).each(function (i, _o) {
+            cid.push(_o.unitNo);
+        });
+        var order = OrderDetail.DATA;
+        OrderDetail._buyAgain(cid.join(","), true, OrderDetail.DATA, OrderDetail.DATA.orderNo);
+    },
+    _buyAgain: function (cids, isall, orderdata, orderno) {    
+        $ajax({ fn: 108, unitNo: cids }, function (o) {
+            if (o.Return == 0) {
+                var product = [];
+                var _product = [];
+                if (isall) {//再次购买                    
+                    for (var i = 0; i < orderdata.product.length; i++) {
+                        var unit = orderdata.product[i];
+                        var obj = { Id: unit.id, Name: unit.pName, PhotoUrl: unit.imgUrl, Cid: unit.unitNo, Num: 1, DbNum: 0, Price: 0, CateName: unit.unitInfo, sopid: "", postFee: 0 };
+                        var _obj = null;
+                        for (var j = 0; j < o.data.length; j++) {
+                            if (obj.Cid == o.data[j].unitNo) {
+                                _obj = o.data[j];
+                            }
+                        }
+                        if (_obj != null) {
+                            obj.Price = _obj.price;
+                            obj.DbNum = _obj.uNum;
+                            product.push(obj);
+                        }
+                        else {
+                            _product.push(obj);
+                        }
+                    }
+                    //提示已下线产品
+                    if (_product.length > 0) {
+                        var htm = "";
+                        $(_product).each(function (i, _o) {
+                            htm += "<li>" + _o.Name + " " + _o.CateName + "</li>";
+                        });
+                        var dlg = weui.dialog({
+                            title: '提示',
+                            content: '以下产品已下线，是否先购买其它正常产品<br/><ul>' + htm + '</ul>',
+                            className: 'custom-classname',
+                            buttons: [{
+                                label: '取消',
+                                type: 'default',
+                                onClick: function () { dlg.hide(); }
+                            }, {
+                                label: '确定',
+                                type: 'primary',
+                                onClick: function () { dlg.hide(); OrderDetail.DoBuyAgain(product,true); }
+                            }]
+                        });
+                    }
+                    else {
+                        OrderDetail.DoBuyAgain(product,true);
+                    }
+                }
+                else {//单品加入购买车
+                    if (o.data.length == 1 && o.data[0].unitNo == cids) {
+                        var unit = {};
+                        var _obj = o.data[0];
+                        $(orderdata.product).each(function (i, _o) {
+                            if (_o.unitNo == cids) {
+                                unit = _o;
+                            }
+                        });
+                        var obj = { Id: unit.id, Name: unit.pName, PhotoUrl: unit.imgUrl, Cid: unit.unitNo, Num: 1, DbNum: _obj.uNum, Price: _obj.price, CateName: unit.unitInfo, sopid: "", postFee: 0 };
+                        OrderDetail.DoBuyAgain([obj], false);
+                        weui.alert(unit.pName+"已加入购买车");
+                    }
+                    else {
+                        weui.alert("产品已下线");
+                    }
+                }                
+            }
+            else {
+                weui.alert("产品已下线");
+            }
+        }, true);
+    }, 
+    DoBuyAgain: function (obj,isgo) {
+        //存入购物车并转入购物车
+        $(obj).each(function (i, _o) {
+            ShopCarPage.addToShopCar(_o);
+        });
+        if (isgo) {
+            $go("shopcar.aspx");
+        }
+    },
+    copyOrderNo: function () {
+        //window.clipboardData.setData("Text", OrderDetail.DATA.OrderNo);
+        //weui.alert("订单号已复制");
+    },
+    cancelOrder: function () {
+        var orderno = OrderDetail.DATA.orderNo;
+        var dlg=weui.dialog({
+            title: '提示',
+            content: '您确认要取消订单吗？',
+            className: 'custom-classname',
+            buttons: [{
+                label: '再想想',
+                type: 'primary',
+                onClick: function () { dlg.hide(); }
+            }, {
+                label: '我确认',
+                type: 'default',
+                onClick: function () {
+                    dlg.hide();
+                    $ajax({ fn: 107, state: 9, orderno: orderno, uid: $get("userid"), openid: $get("openid") }, function (o) {
+                        if (o.Return == 0) {
+                            weui.alert('订单已取消', function () {
+                                window.location.reload();
+                            });
+                        }
+                        else {
+                            weui.alert("取消订单失败，稍候重试");
+                        }
+                    }, true);
+                }
+            }]
+        });
+    },
+    shareOrder: function () {
+        $go("ShareOrder.aspx?orderno=" + OrderDetail.DATA.orderNo);
+    },
+    payOrder: function () {
+        var pname = OrderDetail.DATA.product[0].pName;
+        if (OrderDetail.DATA.product.length > 1) { pname += "等"; }
+        $go("Pay.aspx?pname=" + escape(pname) + "&price=" + OrderDetail.DATA.allPrice + "&orderno=" + OrderDetail.DATA.orderNo);
+    },
+    conformGet: function () {
+        var orderno = OrderDetail.DATA.orderNo;
+        $ajax({ fn: 107, state: 8, orderno: orderno, uid: $get("userid"), openid: $get("openid") }, function (o) {
+            if (o.Return == 0) {
+                window.location.reload();
+            }
+            else {
+                weui.alert("服务开了个小差，再试一次");
+            }
+        }, true);
+    }
+};
+
+var OrderList = {
+    PageNo: 1,
+    TabIndex: 0,
+    DATA:[],
+    init: function () {
+        OrderList.initTab();
+        OrderList.loadOrder();
+    },
+    initTab: function () {
+        weui.tab('#hisTab', {
+            defaultIndex: 0,
+            onChange: function (index) {
+                OrderList.DATA = [];
+                OrderList.TabIndex = index;
+                OrderList.PageNo = 1;
+                $("ul").remove();
+                OrderList.loadOrder();
+            }
+        });
+    },
+    loadOrder: function () {
+        var state = 0;
+        if (OrderList.TabIndex == 0) { state = -1; }
+        else if (OrderList.TabIndex == 1) { state = 0; }
+        else if (OrderList.TabIndex == 2) { state = 2; }
+        else if (OrderList.TabIndex == 3) { state = 8; }
+        else if (OrderList.TabIndex == 4) { state = 9; }
+        $ajax({ fn: 104, openid: $get("openid"), uid: $get("userid"), state: state, page: OrderList.PageNo }, OrderList.loadOrder_cb, true);
+    },
+    loadOrder_cb: function (o) {
+        $(".weui-loadmore").remove();
+        if (o.Return == 0) {
+            if (o.data.length > 0) {                
+                if ($("ul").length == 0) {
+                    $(".weui-tab__panel").append('<ul class="order"></ul>');
+                }
+                $(o.data).each(function (i, _o) {
+                    OrderList.DATA.push(_o);
+                    var htm = '<li data-ind="'+ i +'" data-no="' + _o.orderNo + '">'
+                    htm += '<div class="statu-row"><h5><em>NO.</em>' + _o.orderNo + '</h5><h6><em>' + ConvertShowState(_o.state) + '</em>'
+                    if (_o.state > 8) {
+                        htm += '<i style="display:none;" class="iconfont icon-delete"></i>'
+                    }
+                    else {
+                        htm += '<i style="display:none;" class="iconfont icon-delete"></i>'
+                    }
+                    htm += '</h6></div>'
+                    htm += '<div class="main-card">'
+                    var num = 0;
+                    var name = "";
+                    var uninNos = [];
+                    if (_o.product.length > 1) {
+                        $(_o.product).each(function (j, __o) {
+                            if (name == "") { name = __o.pName; }
+                            uninNos.push(__o.unitNo);
+                            htm += '<div class="img-blank"><img src="' + BASE_URL + __o.imgUrl + '"/></div>';
+                            num += __o.pNum;
+                        }) 
+                        htm += '</div>'
+                        name += "等";
+                    }
+                    else {
+                        htm += '<div class="img-blank"><img src="' + BASE_URL + _o.product[0].imgUrl + '"/></div>';
+                        htm += '<div class="title-panel"><h4>' + _o.product[0].pName + " " + _o.product[0].unitInfo + '<h4></div>'
+                        num = _o.product[0].pNum;
+                        name = _o.product[0].pName;
+                        uninNos.push(_o.product[0].unitNo);
+                    }                    
+                    htm += '</div>';
+                    htm += '<div class="price-row">共'+ num +'件商品 实付款：<em>￥'+ _o.allPrice +'</em></div>'
+                    htm += '<div class="order-btn-row">'
+                    if (_o.state == 0) {
+                        htm += '<button type= "button" name="btnCancel" class="weui-btn weui-btn_mini weui-btn_plain-default"> 取消订单</button>'
+                    }
+                    else {
+                        htm += '<button type= "button" name="btnCancel" class="weui-btn weui-btn_mini weui-btn_plain-default" style="display:none;"> 取消订单</button>'
+                    }
+                    if (_o.isPay == 0 && _o.state == 0) {
+                        htm += '<button type= "button" name="btnPay" data-name="' + name + '" data-price="' + _o.allPrice + '" class="weui-btn weui-btn_mini weui-btn_plain-primary"> 立即支付</button>'
+                    }
+                    else {
+                        htm += '<button type= "button" name="btnPay" data-name="' + name + '" data-price="' + _o.allPrice + '" style="display:none;" class="weui-btn weui-btn_mini weui-btn_plain-primary"> 立即支付</button>'
+                    }
+                    if (_o.state == 8) {
+                        htm += '<button type= "button" name="btnShare" class="weui-btn weui-btn_mini weui-btn_plain-default"> 评价晒单</button>'
+                    } else {
+                        htm += '<button type= "button" name="btnShare" class="weui-btn weui-btn_mini weui-btn_plain-default" style="display:none;" > 评价晒单</button>'
+                    }
+                    if (_o.state >= 1 ) {
+                        htm += '<button type= "button" data-cids="' + uninNos.join(",") + '" name="btnBuyAgain" class="weui-btn weui-btn_mini weui-btn_plain-default"> 再次购买</button>'
+                    } else {
+                        htm += '<button type= "button" data-cids="' + uninNos.join(",") + '" name="btnBuyAgain" class="weui-btn weui-btn_mini weui-btn_plain-default" style="display:none;" > 再次购买</button>'
+                    }
+                    if (_o.state == 2) {
+                        htm += '<button type= "button" data-cids="' + uninNos.join(",") + '" name="btnConform" class="weui-btn weui-btn_mini weui-btn_plain-primary"> 确认收货</button>'
+                    } else {
+                        htm += '<button type= "button" data-cids="' + uninNos.join(",") + '" name="btnConform" class="weui-btn weui-btn_mini weui-btn_plain-primary" style="display:none;" > 确认收货</button>'
+                    }
+                    htm +='</div > '
+                    htm += '</li> '
+                    $("ul").append(htm);
+                });
+
+                $("li>.statu-row,li>.main-card,li>.price-row").off("click").on("click", function () {
+                    $go("OrderDetail.aspx?orderno=" + $(this).parents("li").attr("data-no"));
+                });
+
+                $("button[name=btnPay]").off("click").on("click", function () {
+                    $go("Pay.aspx?pname=" + escape($(this).attr("data-name")) + "&price=" + $(this).attr("data-price") + "&orderno=" + $(this).parents("li").attr("data-no"));
+                });
+                $("button[name=btnCancel]").off("click").on("click", OrderList.CancelOrder);
+                $("button[name=btnConform]").off("click").on("click", OrderList.ConformGet);
+                $("button[name=btnShare]").off("click").on("click", function () {
+                    $go("ShareOrder.aspx?orderno=" + $(this).parents("li").attr("data-no"));
+                });
+                $("button[name=btnBuyAgain]").off("click").on("click", OrderList.BuyAgain);
+
+                if(o.data.length>=10) {
+                    OrderList.PageNo++;
+                    //还有更多
+                    var moreHtml = '<div class="weui-loadmore weui-loadmore_line"><span class="weui-loadmore__tips" >加载更多</span></div>';
+                    $(".weui-tab__panel").append(moreHtml);
+                    $(".weui-loadmore__tips").on("click", OrderList.loadOrder);
+                }
+                else {
+                    //没有更多了
+                    var moreHtml = '<div class="weui-loadmore weui-loadmore_line"><span class="weui-loadmore__tips" >没有更多了</span></div>';
+                    $(".weui-tab__panel").append(moreHtml);
+                }
+
+            }
+            else {
+                var html = '<div style="margin-top:15rem;" class="weui-loadmore weui-loadmore_line"><span class="weui-loadmore__tips">暂无数据，再试一次</span></div>';
+                $(".weui-tab__panel").append(html);
+                $(".weui-loadmore__tips").on("click", OrderList.loadOrder);
+            }
+        }
+        else {
+            var html = '<div style="margin-top:15rem;" class="weui-loadmore weui-loadmore_line"><span class="weui-loadmore__tips">服务器打盹了，再试一次</span></div>';
+            $(".weui-tab__panel").append(html);
+            $(".weui-loadmore__tips").on("click", OrderList.loadOrder);
+        }
+    },
+    CancelOrder: function () {
+        var orderno = $(this).parents("li").attr("data-no");
+        var dlg = weui.dialog({
+            title: '提示',
+            content: '您确认要取消订单吗？',
+            className: 'custom-classname',
+            buttons: [{
+                label: '再想想',
+                type: 'primary',
+                onClick: function () { dlg.hide(); }
+            }, {
+                label: '我确认',
+                type: 'default',
+                onClick: function () {
+                    dlg.hide();
+                    $ajax({ fn: 107, state: 9, orderno: orderno, uid: $get("userid"), openid: $get("openid") }, function (o) {
+                        if (o.Return == 0) {
+                            weui.alert('订单已取消', function () {
+                                $("li[data-no=" + orderno + "] .statu-row h6 em").text("已取消");
+                                //$("li[data-no=" + orderno + "] .statu-row h6 i").show();
+                                $("li[data-no=" + orderno + "] .order-btn-row button").hide();
+                                $("li[data-no=" + orderno + "] .order-btn-row button[name=btnBuyAgain]").show();
+                            });
+                        }
+                        else {
+                            weui.alert("取消订单失败，稍候重试");
+                        }
+                    }, true);
+                }
+            }]
+        });
+    },
+    ConformGet: function () {
+        var orderno = $(this).parents("li").attr("data-no");
+        $ajax({ fn: 107, state: 8, orderno: orderno, uid: $get("userid"), openid: $get("openid") }, function (o) {
+            if (o.Return == 0) {                
+                    $("li[data-no=" + orderno + "] .statu-row h6 em").text("已收货");
+                    //$("li[data-no=" + orderno + "] .statu-row h6 i").show();
+                    $("li[data-no=" + orderno + "] .order-btn-row button").hide();
+                    $("li[data-no=" + orderno + "] .order-btn-row button[name=btnShare]").show();
+                    $("li[data-no=" + orderno + "] .order-btn-row button[name=btnBuyAgain]").show();
+            }
+            else {
+                weui.alert("服务器开了个小差，再试一次");
+            }
+        }, true);
+    },
+    BuyAgain: function () {
+        var orderno = $(this).parents("li").attr("data-no");
+        var ind = $(this).parents("li").attr("data-ind");
+        var cids = $(this).attr("data-cids");
+        OrderDetail._buyAgain(cids, true, OrderList.DATA[ind], orderno);        
+    }
+};
+
+var PayPage = {
+    init: function () {
+        var price = request("price");
+        var orderno = request("orderno");
+        var pname = unescape( request("pname"));
+        $("#txtPrice").text("￥"+price);
+        $("#txtProduct").text(pname);
+        $("#txtOrderno").text(orderno);
+        $("#txtCompany").text("上海晋淼食品有限公司");
+    },
+    onPayInitFail: function () {        
+        $go("orderlist.aspx");
+        return;
+    },
+    preDopay: function () {
+        WxDoPay(PayPage.onPaySuccess, PayPage.onPayFail);
+        //$("#btnOK").text("支付中").css({ "background-color": "rgb(69,192,24)" });
+    },
+    onPaySuccess: function () {
+        $set("order_price", "");        
+        $go("orderdetail.aspx?orderno=" + request("orderno"));           
+    },
+    onPayFail: function () {
+        var dig = weui.dialog({
+            title: "失败", content: "支付失败", buttons: [
+                { label: "重试", type: 'primary', onClick: function () { pay.preDopay();dig.hide();  } },
+                { label: "取消", type: 'default', onClick: function () { $go("orderdetail.aspx?orderno=" + request("orderno")); } }
+            ]
+        });
+    }
+};
+
+var CashPage = {
+    isTemp:false,
+    CashP:[],
+    Pid: [],
+    PostData: [],
+    AllPrice: 0,
+    ProductPrice: 0,
+    PostPrice:0,
+    ProvinceName: "",
+    pname:"",
+    init: function () {
+        CashPage.RenderGoods();       
+        $("#btnWechatAddress").on("click", CashPage.GetWeChatAddress);
+        $("#btnToCash").on("click", CashPage.addOrder);
+    },
+    addOrder: function () {
+        //添加订单
+        ShopCarPage.loadStorage();
+        var pstr = [];      
+        $(CashPage.CashP).each(function (i, _o) {
+            var pitem = [];
+            pitem.push(_o.Id);
+            pitem.push(_o.Cid);
+            pitem.push(_o.Num);
+            pitem.push(_o.Price);
+            pitem.push(_o.sopid);            
+            pstr.push(pitem.join("@"));               
+        });
+        var detail = pstr.join(",");
+        var data = { fn: 103, uid: $get("userid"), otype: $get("utype"), openid: $get("openid"), tel: $("#txtMobile").val(), contact: $("#txtName").val(), addr: $("#txtCity").val() + " " + $("#txtAddress").val(), memo: $("#txtMemo").val(), price: CashPage.ProductPrice, subPrice: 0, postFee: CashPage.PostPrice, shopping: detail };
+        $ajax(data, CashPage.addOrder_cb, true);
+    },
+    addOrder_cb: function (o) {
+        if (o.Return == 0) {
+            if (CashPage.isTemp) {
+                CashPage.clearTempShop();
+            }
+            else {
+                ShopCarPage.ClearShopCar();
+            }
+            var orderno = o.data;            
+            $go("Pay.aspx?price=" + CashPage.ProductPrice + "&pname=" + escape(CashPage.pname) + "&orderno=" + orderno + "&o=");
+        }
+        else {
+            weui.alert("提交订单失败，稍候重试");
+        }
+    },
+    addTempShop: function (obj) {
+        $set("SHOP_TEMP_CAR", JSON.stringify(obj));
+    },
+    clearTempShop: function () {
+        $set("SHOP_TEMP_CAR", "");
+    },
+    loadTempShop: function () {
+        var json = $get("SHOP_TEMP_CAR");
+        var obj = null;
+        if (typeof (json) != 'undefined' && json != null && json != "") {
+            obj = JSON.parse(json);
+        }
+        return obj;
+    },
+    GetWeChatAddress: function () {
+        if ($isDebug) {
+            var res = {"telNumber":"15835116110","userName":"秦超","nationalCode":"140105","errMsg":"openAddress:ok","postalCode":"030032","provinceName":"山西省","cityName":"太原市","countryName":"小店区","detailInfo":"体育南路 永利国际中心九层"};
+            $("#txtMobile").val(res.telNumber);
+            $("#txtName").val(res.userName);
+            //alert(res.provinceName + res.cityName + res.countryName);
+            $("#txtCity").val(res.provinceName + res.cityName);
+            $("#txtAddress").val(res.countryName + res.detailInfo);
+            CashPage.ProvinceName = res.provinceName;
+            CashPage.CountPostFee();
+        }
+        else {
+            wx.openAddress({
+                trigger: function (res) {
+                    //用户开始拉出地址                
+                },
+                success: function (res) {
+                    /*if (res.provinceName != "山西省") {
+                        $.alert("该产品只限山西地区");
+                        return;
+                    }*/
+                    console.debug(JSON.stringify(res));
+                    $("#txtMobile").val(res.telNumber);
+                    $("#txtName").val(res.userName);
+                    //alert(res.provinceName + res.cityName + res.countryName);
+                    $("#txtCity").val(res.provinceName + res.cityName);
+                    $("#txtAddress").val(res.countryName + res.detailInfo);
+                    CashPage.ProvinceName = res.provinceName;
+                    CashPage.CountPostFee();
+                },
+                cancel: function (res) {
+                    //alert('用户取消拉出地址');
+                },
+                fail: function (res) {
+                    // alert(JSON.stringify(res));
+                }
+            });
+        }
+    },
+    GetPostFee: function () {
+        $ajax({ fn: 109, pids: CashPage.Pid.join() }, CashPage.GetPostFee_cb, true);
+    },
+    GetPostFee_cb: function (o) {
+        if (o.Return == 0) {
+            CashPage.PostData = o.data;
+            CashPage.CountPostFee();
+        }
+    },
+    CountPostFee: function () {
+        //系统运费方案
+        var sysFeeType = CashPage.PostData.Ext;
+        //sysFeeType == 0//包邮
+        //sysFeeType == -1//没有邮费优惠
+        //sysFeeType > 0//满减
+        var allPrice = 0;        
+        $(CashPage.CashP).each(function (i, _o) {
+            var pid = _o.Id;
+            var postFee = 0;
+            var postFeeType = -1;
+            $(CashPage.PostData).each(function (j, __o) {
+                if (__o.pid == pid) {
+                    //0参与，1不参与
+                    postFeeType = __o.postFeeType;
+                    if (postFeeType == 0 && sysFeeType==0) {
+                        //参与邮费优惠，包邮
+                        postFee = 0;
+                    }
+                    else {
+                        if (postFeeType == 0 && sysFeeType > 0) {//满减情况计算总价
+                            allPrice += _o.price;
+                        }
+                        //不参与邮费优惠，计算邮费
+                        if (__o.postType == 1) {
+                            postFee = __o.postFee;
+                        }
+                        else if (__o.postType == 2) {
+                            $(_o.post).each(function (k, _p) {
+                                if (postFee == 0 && _p.provice.indexOf(CashPage.ProvinceName) > -1) {
+                                    postFee = _p.postFee;
+                                }
+                            });
+                        }
+                        else {
+                            postFee = 0;
+                        }
+                    }
+                }
+            });
+            _o.postFee = postFee;
+            _o.postFeeType = postFeeType;
+        });
+        CashPage.AllPrice = allPrice;
+        if (sysFeeType > 0 && CashPage.AllPrice > sysFeeType) {
+            //满足满减的情况，改变适用满减的商品邮费
+            $(CashPage.CashP).each(function (j, _o) {
+                _o.postFee = 0;
+            });
+        }
+        if (!CashPage.isTemp) {
+            ShopCarPage.saveToStorage();
+        }
+        CashPage.RenderGoods();
+    },
+    RenderGoods: function () {
+        CashPage.CashP = CashPage.loadTempShop();
+        if (CashPage.CashP == null) {
+            ShopCarPage.loadStorage();
+            CashPage.CashP = ShopCarPage._PS;
+            CashPage.isTemp = false;
+        }
+        else {
+            CashPage.isTemp = true;
+        }
+        var FeePostLimit = 0;   
+        $(".shop-list").empty();
+        var html = '<ul>'
+        var allPrice = 0, allNum = 0;        
+        var allPostFee = 0;
+        CashPage.Pid = [];
+        var pname = "";
+        $(CashPage.CashP).each(function (i, _o) {
+            if (!_o) { return; }
+            if (_o.Num == 0) { ShopCarPage.RemoveItem(_o.Cid); return; }
+            var id = _o.Id;
+            html += '<li data-ind="' + i + '" data-pid="'+ id +'">';
+            html += '<div class="photo-col"><img src="' + BASE_URL + _o.PhotoUrl + '" /></div>';
+            html += '<div class="main-col"><div class="info-row"><h3>' + _o.Name + '</h3><h4>' + _o.CateName + '</h4><h4>单价：' + _o.Price.toFixed(2) + '元，数量：' + _o.Num + '，邮费' + _o.postFee + '元</h4></div></div>'
+            html += '<div class="right-col"><h3>' + (_o.Price * _o.Num).toFixed(2) + '</h3></div></li>'
+            allPrice += _o.Price * _o.Num;
+            allNum += _o.Num;
+            if (pname == "") { pname = _o.Name; }
+            if (CashPage.Pid.indexOf(id) == -1) {
+                CashPage.Pid.push(id);
+            }
+            allPostFee += _o.postFee;
+        });
+        if (CashPage.CashP.length > 1) { pname += "等"; }
+        html += '</ul>'       
+        $(".shop-list").append(html);
+        CashPage.PostPrice = allPostFee.toFixed(2);
+        CashPage.ProductPrice = (allPrice + allPostFee).toFixed(2);
+        if (allPostFee == 0) {
+            $(".price-info-col h6").text("免邮费");            
+        }
+        else {
+            $(".price-info-col h6").text("商品：" + allPrice.toFixed(2) + "元，邮费：" + CashPage.PostPrice +"元");
+        }        
+        $(".price-info-col em").text(CashPage.ProductPrice);       
+        if (CashPage.PostData.length == 0) {
+            CashPage.GetPostFee();
+        }
+        CashPage.pname = pname;
+    }
+};
 
 var ShopCarPage = {
     _PS:[],
     init: function () {
         ShopCarPage.loadStorage();
-        ShopCarPage.ReaderList();
+        ShopCarPage.loadUnitInfo();
         $("#btnEdit").on("click", ShopCarPage.EditShopCar);
         $("#btnClear").on("click", ShopCarPage.RemoveShopCar);
+        $("#btnToCash").on("click", function () { $go("Cash.aspx");});
+    },
+    loadUnitInfo: function () {
+        if (ShopCarPage._PS.length == 0) { return; }
+        var cnoarray = [];
+        $(ShopCarPage._PS).each(function (i, _o) {
+            cnoarray.push(_o.Cid);            
+        });
+        $ajax({ fn: 108, unitNo: cnoarray.join(",") }, ShopCarPage.loadUnitInfo_cb, true);
+    },
+    loadUnitInfo_cb: function (o) {
+        //修改为
+        for (var j = 0; j < ShopCarPage._PS.length; j++) {
+            obj = ShopCarPage._PS[j];
+            var _o = null;
+            for (var i = 0; i < o.data.length; i++) {
+                _o = o.data[i];             
+                if (obj.Cid == _o.unitNo) {
+                    break;
+                }
+            }
+            if (_o != null) {
+                ShopCarPage._PS[j].Price = _o.price;
+                ShopCarPage._PS[j].DbNum = _o.uNum;
+            }
+            else {
+                //已下线 需要处理的
+                ShopCarPage._PS[j].Price = -1;
+                ShopCarPage._PS[j].DbNum = -1;
+                ShopCarPage._PS[j].Num = 0;
+            }
+        }
+        ShopCarPage.saveToStorage();
+        ShopCarPage.ReaderList();
     },
     EditShopCar: function () {
         var act = $(this).attr("data-act");
@@ -99,6 +1056,10 @@ var ShopCarPage = {
         ShopCarPage.saveToStorage();
         ShopCarPage.RanderPriceInfo();
     },
+    ClearShopCar: function () {
+        ShopCarPage._PS = [];
+        $set("SHOP_CAR", "");
+    },
     RemoveShopCar: function () {
         var chks = $("input[name=chkProduct]:checked");
         if (chks.length > 0) {
@@ -121,28 +1082,34 @@ var ShopCarPage = {
         $(".price-info-col h6").text("总价：" + allPrice + "，优惠：0.00");
     },
     ReaderList: function () {
-        var FeePostLimit = 39;
-        //<div class="info-bar"><h3>满' + FeePostLimit + '元免运费</h3><h6><span>已免运费</span><i class="icon iconfont icon-warning"></i></h6></div>
+        var FeePostLimit = 0;        
         var html = '<div class="shopcar-list">'
         html += '<ul>'
         var allPrice = 0, allNum = 0;
         var list = ShopCarPage._PS;
         $(list).each(function (i, _o) {
             if (!_o) { return; }
-            var id = _o.Id;
+            var id = _o.Id;            
             html += '<li data-id="' + id + '" data-cid="'+ _o.Cid +'" data-cnum="' + _o.DbNum + '"><div class="check-col weui-cells_checkbox"><label class="weui-cell weui-check__label" for="chk_' + id + '"><div class="weui-cell__hd"><input type="checkbox" name="chkProduct" checked="checked"  class="weui-check" id="chk_' + id + '"><i class="weui-icon-checked"></i></div></label></div>';
             html += '<div class="photo-col"><img src="' + BASE_URL + _o.PhotoUrl + '" /></div>';
-            html += '<div class="main-col"><div class="info-row"><h3>' + _o.Name + '&nbsp;<span>' + _o.CateName + '</span></h3></div><div class="add-sub-row"><div class="sub-col" data-val="-1"><i class="iconfont icon-minus"></i></div><div class="num-col">' + _o.Num + '</div><div class="plus-col"  data-val="1"><i class="iconfont icon-add1"></i></div></div></div>'
+            html += '<div class="main-col"><div class="info-row"><h3>' + _o.Name + '&nbsp;<span>' + _o.CateName + '</span></h3></div>'
+            if (_o.Num > 0) {
+                html += '<div class="add-sub-row" > <div class="sub-col" data-val="-1"><i class="iconfont icon-minus"></i></div> <div class="num-col">' + _o.Num + '</div> <div class="plus-col" data-val="1"><i class="iconfont icon-add1"></i></div></div>'
+            }
+            else if (_o.DbNum == 0 && _o.Price == -1) {
+                html += '<div class="add-sub-row">商品已下线</div>'
+            }
+            else if (_o.DbNum == 0 && _o.Pirce>0) {
+                html += '<div class="add-sub-row">商品已售馨</div>'
+            }
+            html += '</div>'
             html += '<div class="right-col"><h4>' + _o.Price.toFixed(2) + '</h4><div><i class="iconfont icon-delete"></i></div></div></li>'
             allPrice += _o.Price * _o.Num;
             allNum += _o.Num;
-        });
+        });        
         html += '</ul></div>'
         allPrice = allPrice.toFixed(2);
-        $(".page__bd").append(html);
-        //if (allPrice < FeePostLimit) {
-        //    $(".shopcar-list .info-bar h6 span").text("邮费10元")
-        //}
+        $(".page__bd").append(html);       
         $(".block-btn-col span").text("共" + allNum + "件");
         $(".price-info-col em").text(allPrice);
         $(".price-info-col h6").text("总价：" + allPrice + "，优惠：0.00");
@@ -187,7 +1154,7 @@ var ShopCarPage = {
             }
         }
         if(_ind==-1){          
-            _obj = { Id: obj.Id, Name: obj.Name, PhotoUrl: obj.PhotoUrl, Cid: obj.Cid, Num: obj.Num, DbNum:5, Price: obj.Price, CateName: obj.CateName,sopid: obj.sopid };
+            _obj = { Id: obj.Id, Name: obj.Name, PhotoUrl: obj.PhotoUrl, Cid: obj.Cid, Num: obj.Num, DbNum:5, Price: obj.Price, CateName: obj.CateName,sopid: obj.sopid,postFee:0 };
         }
        
         if (_ind > -1) {
@@ -209,7 +1176,7 @@ var ShopCarPage = {
         }
     },
     saveToStorage: function () {
-        if (ShopCarPage._PS.length > 0) {
+        if (ShopCarPage._PS!=null) {
             $set("SHOP_CAR", JSON.stringify(ShopCarPage._PS));
         }
     },
@@ -268,7 +1235,7 @@ var DetailPage = {
         }
     },
     preShare: function () {   
-        initWeChatShare(obj);
+        initWeChatShare(DetailPage.shareObj);
     },
     initChooseBox: function (data,name) {
         var html = '<div class="mask-bg"></div>';
@@ -406,26 +1373,50 @@ var DetailPage = {
                 logo: BASE_URL + o.data.imgUrl[0],
                 success: function () { },
                 cancel: function () { }
-            };
-            //评价
-            /*
-            html = '<div class="comment-block"><div class="title-row"><div class="title-col">大家说</div><div class="rate-col">好评率：<em>' + o.data.Comment.RatePeer + '</em><i class="icon iconfont icon-arrowright"></i></div></div>';
-            html += '<ul>'
-            $(o.data.Comment.List).each(function (i, _o) {
-                html += '<li><div class="li-hd"><div class="photo-col"><img src="' + _o.PhotoUrl + '"/></div><div class="name-col"><h5>' + _o.Name + '</h5><div class="star-row">';
-                for (var i = 1; i <= _o.RateStar; i++) {
-                    html += '<i class="icon iconfont icon-favoritesfilling"></i>'
-                }
-                for (var i = _o.RateStar; i < 5; i++) {
-                    html += '<i class="icon iconfont icon-favoritesfilling gray"></i>'
-                }
-                html += '</div ></div > <div class="date-col">' + formatDate(_o.AddOn) + '</div></div > <p>' + _o.Msg + '</p></li > '
-            });
-            html += '</ul></div>';
-            $('.detail-info').append(html);*/
+            };            
+            html = '<div class="comment-block" style="display:none;"></div>';
+            DetailPage.loadComment();
+            $('.detail-info').append(html);
             $('.detail-info').append('<p class="content">' + unescape(o.data.pInfo) + '</p>');
             DetailPage.initChooseBox(o.data.unit,o.data.pName);
         }
+    },
+    loadComment: function () {
+        $ajax({ fn: 12, pid: DetailPage.Pid, uid: $get("userid"), openid: $get("openid") }, DetailPage.loadComment_cb, false);
+    },
+    loadComment_cb: function (o) {
+        if (o.Return == 0 && o.data.length>0) {
+            $(".comment-block").show();
+            var html = '<div class="title-row"><div class="title-col">大家说</div><div class="rate-col">好评率：<em>' + o.Ext.toFixed(0) + '%</em><i class="icon iconfont icon-arrowright"></i></div></div>';
+            html += '<ul>'
+            var count = o.data.length;
+            if (count > 5) { count = 5; }
+            for (var i = 0; i < count;i++){
+                var _o = o.data[i];
+                html += '<li><div class="li-hd"><div class="photo-col"><img src="' + _o.photoUrl + '"/></div><div class="name-col"><h5>' + _o.nickName + '</h5><div class="star-row">';
+                for (var i = 0; i < _o.grade; i++) {
+                    html += '<i class="iconfont icon-favoritesfilling"></i>'
+                }
+                for (var i = _o.grade; i < 5; i++) {
+                    html += '<i class="iconfont icon-iconfontxingxing"></i>'
+                }
+                html += '</div ></div > <div class="date-col">' + formatDate(_o.addOn) + '</div></div > <p>' + _o.memo + '</p>'
+                //图片
+                if (_o.attach.length > 0) {
+                    html += '<div class="pic-area">'
+                    $(_o.attach).each(function (j, __o) {
+                        html += '<div class="img-col"><img src="' + BASE_URL+ __o.aSrc + '"/></div>';
+                    });
+                    html += '</div>'
+                }
+                html += '</li >'                
+            }
+            html += '</ul>'
+            $(".comment-block").append(html);
+            ShareProdcut.imgreSize();
+            $(".img-col img").on("click", ShareProdcut.priviewImg);
+            $(".comment-block .title-row").on("click", function () { $go("comment.aspx?pid=" + DetailPage.Pid); });
+        }        
     },
     ChangeNum: function () {
         var v = parseInt($(this).attr("data-val"));
@@ -454,7 +1445,8 @@ var DetailPage = {
         }
         else {
             //直接购买
-            $go("Cash.aspx?t=1&sopid=" + __SOPID + "&id=" + obj.id + "&cid=" + unitNo + "&catename=" + unitName + "&name=" + obj.pName + "&photoUrl=" + obj.imgUrl[0] + "&price=" + unitprice + "&num=" + num + "&ot=" + new Date().getTime());           
+            CashPage.addTempShop([{ Id: obj.id, Cid: unitNo, CateName: unitName, Name: obj.pName, PhotoUrl: obj.imgUrl[0], Price: unitprice, Num: num, sopid: __SOPID, postFee:0 }]);
+            $go("Cash.aspx");           
         }
     }
 };
@@ -740,11 +1732,14 @@ function ConvertShowState(n) {
         case 2:
             result = "待收货";
             break;
-        case 3:
-            result = "待评价";
+        case 8:
+            result = "已完成";
             break;
         case 9:
-            result = "已退货";
+            result = "已取消";
+            break;
+        case 10:
+            result = "已退款";
             break;               
         default:
             result = "处理中";
@@ -756,7 +1751,7 @@ function ConvertShowState(n) {
 
 function CheckWechatUserInfo() {
     var code = getParam("code");
-    if (code == "") { return GetWechatLink("broker", PageName + ".aspx"); }
+    if (code == "") { return GetWechatLink("", PageName + ".aspx"); }
     var openid = $get('openid');
     if (code != "" && (openid == null || openid == "")) {
         getOpenId(code, getMemberInfo);
@@ -801,6 +1796,29 @@ function getMemberInfoCallBack(o) {
             $set('sex', user.sex);
         }
     }
+}
+
+function maskTel(tel) {
+    var len = tel.length;
+    var result = "";
+    if (len >= 11) {
+        result = tel.substring(0, 3);
+        for (var i = 0; i<len-7; i++) {
+            result += "*";
+        }
+        result += tel.substring(len-4, len);
+    }
+    else if ( len > 7) {
+        result = tel.substring(0, 2);
+        for (var i = 0; i < len-5; i++) {
+            result += "*";
+        }
+        result += tel.substring(len - 3, len);
+    }
+    else {
+        result = tel;
+    }
+    return result;
 }
 
 function GetWechatLink(folder, page) {

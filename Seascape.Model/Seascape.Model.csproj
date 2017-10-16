@@ -50,6 +50,7 @@
     <Compile Include="Class.cs" />
     <Compile Include="coin.cs" />
     <Compile Include="complaint.cs" />
+    <Compile Include="content.cs" />
     <Compile Include="Count\countAll.cs" />
     <Compile Include="employee.cs" />
     <Compile Include="evaluate.cs" />
@@ -83,14 +84,18 @@
     <Compile Include="View\sysLog.cs" />
     <Compile Include="View\UnitInfo.cs" />
     <Compile Include="WebView\CoinInfo.cs" />
+    <Compile Include="WebView\postForWeb.cs" />
     <Compile Include="WebView\ProductFAd.cs" />
     <Compile Include="WebView\ProductFWeb.cs" />
     <Compile Include="WebView\ProductFWebInfo.cs" />
     <Compile Include="WebView\ProductPostForWeb.cs" />
     <Compile Include="WebView\UnitFWeb.cs" />
+    <Compile Include="WebView\UnitList.cs" />
     <Compile Include="WebView\WebEvaluate.cs" />
+    <Compile Include="WebView\WebHb.cs" />
     <Compile Include="WebView\WebOrderInfo.cs" />
     <Compile Include="WebView\WebOrderList.cs" />
+    <Compile Include="WebView\WebUser.cs" />
     <Compile Include="wxPay.cs" />
     <Compile Include="wxPayRefund.cs" />
   </ItemGroup>

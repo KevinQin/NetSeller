@@ -32,7 +32,10 @@ public class Handler : IHttpHandler {
     
     //分页大小
     public static int perPage = 10;
-    public static string BaseUrl = "http://y.edmp.mobi/";
+    public static string BaseUrl = "http://s.seascapeapp.cn/app/";
+    
+    //成为VIP会员要有的好友数
+    public static int vipUserNum = 9;
 
     public static string DefaultWrokNo = "100";
     public static string _orderNo = "";
@@ -44,7 +47,7 @@ public class Handler : IHttpHandler {
         response = new Response();
         int F = string.IsNullOrEmpty(c.Request["fn"]) ? 0 : Convert.ToInt16(c.Request["fn"]);
         _orderNo = string.IsNullOrEmpty(c.Request["orderNo"]) ? "" : c.Request["orderNo"].ToString();
-        //AddQueryLog(c);
+        Comm.AddQueryLog(c);
         c.Response.ContentType = "text/plain";
         c.Response.Write(GetResult(F, c));
     }
@@ -127,6 +130,39 @@ public class Handler : IHttpHandler {
                     break;
                 case 107:
                     Result = CancelOrder(c);//取消订单
+                    break;
+                case 108:
+                    Result = GetUnitPrice(c);//获取库存价格列表
+                    break;
+                case 109:
+                    Result = GetPostPrice(c);//获取运费方案
+                    break;
+                case 110:
+                    Result = GetUseCoin(c);//获取可用余额
+                    break;
+                case 111:
+                    Result = GetCoinList(c);//获取佣金列表
+                    break;
+                case 112:
+                    Result = GetUserList(c);//获取好友列表
+                    break;
+                case 113:
+                    Result = GetHbList(c);//获取代言人海报列表
+                    break;
+                case 114:
+                    Result = CreateHb(c);//生成海报
+                    break;
+                case 115:
+                    Result = SendHb(c);//发送海报
+                    break;
+                case 116:
+                    Result = GetUserCount(c);//获取好友人数和成为VIP会员的要求
+                    break;
+                case 117:
+                    Result = GetUserCoin(c);//获取用户佣金数量
+                    break;
+                case 118:
+                    Result = ToCash(c);//申请提现
                     break;
             }
         }
@@ -463,13 +499,14 @@ public class Handler : IHttpHandler {
                             unitNo = iArr[1],
                             price = Convert.ToDouble(iArr[3])
                         };
-                        productMx += tempName + "[" + op.pNum + "*" + Math.Round(op.price, 1) + "],";
+                        productMx += tempName + "[" + Math.Round(op.price, 1) + "*" + op.pNum + "],";
                         new Main().AddToDb(op, "t_orderpList");
 
                         //添加分佣
                         Double tempRadio = 0;
                         tempOpenId = iArr[4];
                         tempUType = 0;
+                        //判断是否为从分享的产品过来
                         if (tempOpenId.Length > 0)
                         {
                             //判断用户是否是会员
@@ -489,12 +526,14 @@ public class Handler : IHttpHandler {
                         }
                         if (tempOpenId.Length == 0)
                         {
+                            //不是分享的产品，判断是否有上级
                             if (srcOpenId.Length > 0 && srcUType > 0)
                             {
                                 tempOpenId = srcOpenId;
                                 tempUType = srcUType;
                             }
                         }
+                        //tempPrice为产品本身价格
                         if (tempPrice > subPrice && tempOpenId.Length > 0)
                         {
                             tempFyRadio = FyRadio;
@@ -502,9 +541,9 @@ public class Handler : IHttpHandler {
                             {
                                 tempFyRadio = FyRadio_FX;
                             }
-                            if (subPrice > 0)
+                            if (subPrice > 0)//是否使用了折扣
                             {
-                                tempRadio = (tempPrice - subPrice) / tempPrice;
+                                tempRadio = (tempPrice - subPrice) / tempPrice;//所有产品平分金币
                                 coin coin = new coin
                                 {
                                     addOn = DateTime.Now,
@@ -541,7 +580,7 @@ public class Handler : IHttpHandler {
                         addOn = DateTime.Now,
                         openId = u.openId,
                         srcOpenId = "",
-                        coinValue = subPrice,
+                        coinValue = 0-subPrice,
                         orderNo = o.orderNo,
                         cType = 1,
                         state = 2
@@ -563,7 +602,7 @@ public class Handler : IHttpHandler {
                     TMsg_Order tmo = new TMsg_Order().GetMessageBody("尊敬的" + o.contact + "，您好，您的订单已支付成功！", "万品微店", o.allPrice.ToString() + "元", DateTime.Now.ToString("yyyy-MM-dd HH:mm"), o.orderNo, "[万品微店]", out MsgContent);
                     SendTemplateMessage(c, tmo, new TMsg_Order().Key(), u.openId, BaseUrl + detailUrl + "?orderno=" + o.orderNo + "&ot=1", MsgContent);
                     */
-                    TMsg_Work tmo = new TMsg_Work().GetMessageBody("尊敬的" + o.contact + "，您好，您的订单已下单完成，订单总价：" + Math.Round(price,1) + "，采购明细：" + productMx + "，感谢您选择万品微店！", order_t.id.ToString(), DateTime.Now.ToString("yyyy-MM-dd HH:mm"), "[万品微店]", out MsgContent);
+                    TMsg_Work tmo = new TMsg_Work().GetMessageBody("尊敬的" + o.contact + "，您好，您的订单已下单完成，订单总价：" + Math.Round(o.allPrice,1) + "，采购明细：" + productMx + "，感谢您选择万品微店！", order_t.id.ToString(), DateTime.Now.ToString("yyyy-MM-dd HH:mm"), "[万品微店]", out MsgContent);
                     Comm.SendTemplateMessage(c, tmo, new TMsg_Work().Key(), u.openId, BaseUrl + "orderlist.html", MsgContent);
                     //AddLog(o.orderNo, "给用户发送模板消息：" + MsgContent, 0, DefaultWrokNo, 2);
                 }
@@ -587,7 +626,8 @@ public class Handler : IHttpHandler {
                     Msg = "添加成功",
                     OrderNo = o.orderNo
                 };
-                return JsonMapper.ToJson(temp_o);
+                //return JsonMapper.ToJson(temp_o);
+                return response.Success(o.orderNo);
             }
         }
         return Sys_Result.GetR(1, "");
@@ -602,18 +642,149 @@ public class Handler : IHttpHandler {
     public string GetOrderList(HttpContext c)
     {
         int uid = string.IsNullOrEmpty(c.Request["uid"]) ? 0 : Convert.ToInt32(c.Request["uid"]);
+        int page = string.IsNullOrEmpty(c.Request["page"]) ? 1 : Convert.ToInt16(c.Request["page"]);
+        int state = string.IsNullOrEmpty(c.Request["state"]) ? -1 : Convert.ToInt16(c.Request["state"]);
         string openId = string.IsNullOrEmpty(c.Request["openId"]) ? "" : c.Request["openId"];
         if (uid > 0 && openId.Length > 0)
         {
             user u = new _User().GetUser(openId, "", 0);
             if (u.id == uid)
             {
-                List<WebOrderList> lo = new _WebOrder().GetOrderList(uid);
+                string sql = "select * from t_order where userId = " + uid + " order by id desc limit " + Convert.ToInt16((page - 1) * perPage) + "," + perPage;
+                if (state > -1)
+                {
+                    sql = "select * from t_order where userId = " + uid + " and state = " + state + " order by id desc limit " + Convert.ToInt16((page - 1) * perPage) + "," + perPage;
+                }
+                List<WebOrderList> lo = new _WebOrder().GetOrderList(sql,uid);
                 if (lo != null && lo.Count > 0)
                 {
                     return response.Success(lo);
                 }   
             }
+        }
+        return Sys_Result.GetR(1, "");
+    }
+
+    /// <summary>
+    /// 获取佣金列表
+    /// </summary>
+    /// <param name="c"></param>
+    /// <returns></returns>
+    public string GetCoinList(HttpContext c)
+    {
+        int uid = string.IsNullOrEmpty(c.Request["uid"]) ? 0 : Convert.ToInt32(c.Request["uid"]);
+        int cType = string.IsNullOrEmpty(c.Request["cType"]) ? -1 : Convert.ToInt32(c.Request["cType"]);
+        int page = string.IsNullOrEmpty(c.Request["page"]) ? 1 : Convert.ToInt16(c.Request["page"]);
+        string openId = string.IsNullOrEmpty(c.Request["openId"]) ? "" : c.Request["openId"];
+        if (uid > 0 && openId.Length > 0)
+        {
+            user u = new _User().GetUser(openId, "", 0);
+            if (u.id == uid)
+            {
+                string sql = "select * from t_coin where openId = '" + openId + "' and (state = 2 or state = 8) order by addOn desc limit " + Convert.ToInt16((page - 1) * perPage) + "," + perPage;
+                if (cType > -1)
+                {
+                    sql = "select * from t_coin where openId = '" + openId + "' and cType = " + cType + " order by addOn desc limit " + Convert.ToInt16((page - 1) * perPage) + "," + perPage;
+                }
+                List<CoinInfo> lo = new _Coin().GetCoinList(sql);
+                if (lo != null && lo.Count > 0)
+                {
+                    return response.Success(lo);
+                }
+            }
+        }
+        return Sys_Result.GetR(1, "");
+    }
+
+    /// <summary>
+    /// 获取好友列表
+    /// </summary>
+    /// <param name="c"></param>
+    /// <returns></returns>
+    public string GetUserList(HttpContext c)
+    {
+        int uid = string.IsNullOrEmpty(c.Request["uid"]) ? 0 : Convert.ToInt32(c.Request["uid"]);
+        int page = string.IsNullOrEmpty(c.Request["page"]) ? 1 : Convert.ToInt16(c.Request["page"]);
+        string openId = string.IsNullOrEmpty(c.Request["openId"]) ? "" : c.Request["openId"];
+        if (uid > 0 && openId.Length > 0)
+        {
+            if (page == 0)
+            {
+                perPage = 10000;
+            }
+            user u = new _User().GetUser(openId, "", 0);
+            if (u.id == uid)
+            {
+                string sql = "select * from t_user where sourceId = " + uid + " order by addOn desc limit " + Convert.ToInt16((page - 1) * perPage) + "," + perPage;
+                string sql_c = "select count(*) as t from t_user where sourceId = " + uid;
+                int count = 0;
+                List<WebUser> lo = new _WebUser().GetUserList(sql, sql_c, out count);
+                if (lo != null && lo.Count > 0)
+                {
+                    return response.Success(lo,count);
+                }
+            }
+        }
+        return Sys_Result.GetR(1, "");
+    }
+
+    /// <summary>
+    /// 获取好友人数
+    /// </summary>
+    /// <param name="c"></param>
+    /// <returns></returns>
+    public string GetUserCount(HttpContext c)
+    {
+        int uid = string.IsNullOrEmpty(c.Request["uid"]) ? 0 : Convert.ToInt32(c.Request["uid"]);
+        string openId = string.IsNullOrEmpty(c.Request["openId"]) ? "" : c.Request["openId"];
+        if (uid > 0 && openId.Length > 0)
+        {
+            user u = new _User().GetUser(openId, "", 0);
+            if (u.id == uid)
+            {
+                int count = new _WebUser().GetUserCount(uid);
+                return response.Success(count, vipUserNum);
+            }
+        }
+        return Sys_Result.GetR(1, "");
+    }
+
+    /// <summary>
+    /// 获取用户佣金数量
+    /// </summary>
+    /// <param name="c"></param>
+    /// <returns></returns>
+    public string GetUserCoin(HttpContext c)
+    {
+        int uid = string.IsNullOrEmpty(c.Request["uid"]) ? 0 : Convert.ToInt32(c.Request["uid"]);
+        string openId = string.IsNullOrEmpty(c.Request["openId"]) ? "" : c.Request["openId"];
+        if (uid > 0 && openId.Length > 0)
+        {
+            user u = new _User().GetUser(openId, "", 0);
+            if (u.id == uid)
+            {
+                Double coin = new _Coin().GetCoin(openId);
+                Double coin_use = new _Coin().GetCoinForUse(openId);
+                return response.Success(coin, coin_use);
+            }
+        }
+        return Sys_Result.GetR(1, "");
+    }
+
+    
+    /// <summary>
+    /// 获取代言人海报列表
+    /// </summary>
+    /// <param name="c"></param>
+    /// <returns></returns>
+    public string GetHbList(HttpContext c)
+    {
+        int uid = string.IsNullOrEmpty(c.Request["uid"]) ? 0 : Convert.ToInt16(c.Request["uid"].ToString());
+        string sql = "select * from t_content where cType = 1 and enable = 0 order by isHot desc,addOn desc";
+        List<WebHb> lo = new _Content().GetHbList(sql);
+        if (lo != null && lo.Count > 0)
+        {
+            return response.Success(lo);
         }
         return Sys_Result.GetR(1, "");
     }
@@ -637,6 +808,170 @@ public class Handler : IHttpHandler {
             }
         }
         return Sys_Result.GetR(0, "");
+    }
+
+    /// <summary>
+    /// 获取可用余额
+    /// </summary>
+    /// <param name="c"></param>
+    /// <returns></returns>
+    public string GetUseCoin(HttpContext c)
+    {
+        int uid = string.IsNullOrEmpty(c.Request["uid"]) ? 0 : Convert.ToInt32(c.Request["uid"]);
+        string openId = string.IsNullOrEmpty(c.Request["openId"]) ? "" : c.Request["openId"].ToString();
+        if (uid > 0 && openId.Length > 0)
+        {
+            user u = new _User().GetUser(openId, "", 0);
+            if (u != null)
+            {
+                if (u.id == uid)
+                {
+                    Double coin = new _Coin().GetCoin(openId);
+                    return response.Success(coin);
+                }
+            }
+        }
+        return Sys_Result.GetR(0, "");
+    }
+
+    /// <summary>
+    /// 申请提现
+    /// </summary>
+    /// <param name="c"></param>
+    /// <returns></returns>
+    public string ToCash(HttpContext c)
+    {
+        int uid = string.IsNullOrEmpty(c.Request["uid"]) ? 0 : Convert.ToInt32(c.Request["uid"]);
+        Double cash = string.IsNullOrEmpty(c.Request["cash"]) ? 0 : Convert.ToInt32(c.Request["cash"]);
+        string openId = string.IsNullOrEmpty(c.Request["openId"]) ? "" : c.Request["openId"].ToString();
+        if (uid > 0 && openId.Length > 0)
+        {
+            user u = new _User().GetUser(openId, "", 0);
+            if (u != null)
+            {
+                if (u.id == uid)
+                {
+                    Double coin_ok = new _Coin().GetCoin(openId);
+                    Double coin_cash = new _Coin().GetCoinForCash(openId);
+                    Double coin_use = coin_ok - coin_cash;
+                    if (Math.Round(coin_use,2) >= Math.Round(cash,2))
+                    {
+                        coin co = new coin
+                        {
+                            addOn = DateTime.Now,
+                            coinValue = cash,
+                            cType = 3,
+                            state = 0,
+                            openId = openId
+                        };
+                        if (new Main().AddToDb(co, "t_coin"))
+                        {
+                            return response.Success("提交申请完成，请按说明操作");        
+                        }
+                    }
+                    
+                }
+            }
+        }
+        return Sys_Result.GetR(0, "");
+    }
+
+    /// <summary>
+    /// 生成海报并获取链接
+    /// </summary>
+    /// <param name="c"></param>
+    /// <returns></returns>
+    public string CreateHb(HttpContext c)
+    {
+        int uid = string.IsNullOrEmpty(c.Request["uid"]) ? 0 : Convert.ToInt32(c.Request["uid"]);
+        int hbId = string.IsNullOrEmpty(c.Request["hbId"]) ? 0 : Convert.ToInt32(c.Request["hbId"]);
+        string openId = string.IsNullOrEmpty(c.Request["openId"]) ? "" : c.Request["openId"].ToString();
+        if (uid > 0 && openId.Length > 0)
+        {
+            user u = new _User().GetUser(openId, "", 0);
+            if (u != null)
+            {
+                if (u.id == uid)
+                {
+                    string ResultUrl = GetCreateHBUrl(c, uid, hbId);
+                    if (ResultUrl.Length > 0)
+                    {
+                        return response.Success(ResultUrl);
+                    }
+                }
+            }
+        }
+        return response.Fail("生成失败");
+    }
+
+    /// <summary>
+    /// 生成海报
+    /// </summary>
+    /// <param name="c"></param>
+    /// <param name="uid"></param>
+    /// <param name="hbId"></param>
+    /// <returns></returns>
+    public string GetCreateHBUrl(HttpContext c,int uid,int hbId)
+    {
+        content content = new _Content().GetContent(hbId);
+        if (content != null)
+        {
+            string imgUrl = content.imgUrl;
+            string sizes = content.hbSize;
+            try
+            {
+                int left = 0;
+                int top = 0;
+                int size = 0;
+                left = Convert.ToInt16(sizes.Split('|')[1]);
+                top = Convert.ToInt16(sizes.Split('|')[0]);
+                size = Convert.ToInt16(sizes.Split('|')[2]);
+                int[] sizeArr = new int[4] { left, top, size, size };
+                if (imgUrl.Length > 0 && size > 0)
+                {
+                    string resultUrl = new HbCreate().CreateHBForUser(c, uid, hbId, sizeArr, imgUrl);
+                    if (resultUrl.Length > 0)
+                    {
+                        return resultUrl;
+                    }
+                }
+
+            }
+            catch
+            {
+
+            }
+        }
+        return "";
+    }
+
+    /// <summary>
+    /// 发送海报给客户
+    /// </summary>
+    /// <param name="c"></param>
+    /// <returns></returns>
+    public string SendHb(HttpContext c)
+    {
+        int uid = string.IsNullOrEmpty(c.Request["uid"]) ? 0 : Convert.ToInt32(c.Request["uid"]);
+        int hbId = string.IsNullOrEmpty(c.Request["hbId"]) ? 0 : Convert.ToInt32(c.Request["hbId"]);
+        string openId = string.IsNullOrEmpty(c.Request["openId"]) ? "" : c.Request["openId"].ToString();
+        if (uid > 0 && openId.Length > 0)
+        {
+            user u = new _User().GetUser(openId, "", 0);
+            if (u != null)
+            {
+                if (u.id == uid)
+                {
+                    string ResultUrl = GetCreateHBUrl(c, uid, hbId);
+                    if (ResultUrl.Length > 0)
+                    {
+                        HbCreate.SendImage(c, openId, c.Server.MapPath(ResultUrl));
+                        return response.Success("发送完成");
+                    }
+                }
+            }
+        }
+        return response.Fail("生成失败");
     }
    
     /// <summary>
@@ -687,6 +1022,7 @@ public class Handler : IHttpHandler {
     {
         string OrderNo = c.Request["OrderNo"] == null ? "" : c.Request["OrderNo"].ToString().Replace("#", "");
         string memo = c.Request["memo"] == null ? "" : c.Request["memo"].ToString();
+        string unitNo = c.Request["unitNo"] == null ? "" : c.Request["unitNo"].ToString();
         string openId = c.Request["openId"] == null ? "" : c.Request["openId"].ToString();
         int uid = string.IsNullOrEmpty(c.Request["uid"]) ? 0 : Convert.ToInt32(c.Request["uid"]);
         int pid = string.IsNullOrEmpty(c.Request["pid"]) ? 0 : Convert.ToInt32(c.Request["pid"]);
@@ -698,7 +1034,7 @@ public class Handler : IHttpHandler {
             if(OrderNo.Length==0){
                 eType=1;
             }
-            if (new _Evaluate().IsEvaluate(OrderNo,pid,uid,eType))
+            if (new _Evaluate().IsEvaluate(OrderNo, pid, uid, eType, unitNo))
             {
                 return Sys_Result.GetR(1, "该记录已评价过");
             }
@@ -711,7 +1047,8 @@ public class Handler : IHttpHandler {
                     grade = grade,
                     addOn = DateTime.Now,
                     uid = uid,
-                    pid = pid
+                    pid = pid,
+                    unitNo = unitNo
                     
                 };
                 if (new Main().AddToDb(e, "t_evaluate"))
@@ -746,6 +1083,7 @@ public class Handler : IHttpHandler {
                                         descNum = 0,
                                         orderNo = OrderNo,
                                         pid = pid,
+                                        unitNo = unitNo,
                                         aType = 1
                                     };
                                     new Main().AddToDb(a, "t_attach");
@@ -788,14 +1126,15 @@ public class Handler : IHttpHandler {
     public string GetEvalueateList(HttpContext c)
     {
         int uid = string.IsNullOrEmpty(c.Request["uid"]) ? 0 : Convert.ToInt32(c.Request["uid"]);
-        int pid = string.IsNullOrEmpty(c.Request["uid"]) ? 0 : Convert.ToInt32(c.Request["uid"]);
+        int pid = string.IsNullOrEmpty(c.Request["pid"]) ? 0 : Convert.ToInt32(c.Request["pid"]);
         string openId = string.IsNullOrEmpty(c.Request["openId"]) ? "" : c.Request["openId"];
+        string unitNo = string.IsNullOrEmpty(c.Request["unitNo"]) ? "" : c.Request["unitNo"];
         string orderNo = string.IsNullOrEmpty(c.Request["orderNo"]) ? "" : c.Request["orderNo"];
         if (pid > 0 || orderNo.Length > 0)
         {
             Double radio = 100;
-            List<WebEvaluate> el = new _Evaluate().GetEvaluateList(orderNo, pid, out radio);
-            response.Success(el,radio);
+            List<WebEvaluate> el = new _Evaluate().GetEvaluateList(orderNo, pid,unitNo, out radio);
+            return response.Success(el,radio);
         }
         return Sys_Result.GetR(1, "");
     }
@@ -1320,6 +1659,54 @@ public class Handler : IHttpHandler {
         if (pf != null)
         {
             return response.Success(pf);
+        }
+        return Sys_Result.GetR(1, "");
+    }
+
+    /// <summary>
+    /// 获取库存价格详情
+    /// </summary>
+    /// <param name="c"></param>
+    /// <returns></returns>
+    public string GetUnitPrice(HttpContext c)
+    {
+        string unitNo = string.IsNullOrEmpty(c.Request["unitNo"]) ? "" : c.Request["unitNo"].ToString();
+        if (unitNo.Length > 0)
+        {
+            List<UnitPrice> pf = new _Unit().GetUnitPriceList(unitNo);
+            if (pf != null && pf.Count > 0)
+            {
+                return response.Success(pf);
+            }            
+        }
+        return Sys_Result.GetR(1, "");
+    }
+
+    /// <summary>
+    /// 获取运费价格列表
+    /// </summary>
+    /// <param name="c"></param>
+    /// <returns></returns>
+    public string GetPostPrice(HttpContext c)
+    {
+        string pids = string.IsNullOrEmpty(c.Request["pids"]) ? "" : c.Request["pids"].ToString();
+        if (pids.Length > 0)
+        {
+            List<postForWeb> pf = new _ProductFWeb().GetPostInfo(pids);
+            List<post> post = new _Post().GetPost();
+            Double postFee = 0;
+            foreach (post item in post)
+            {
+                if (item.postType == 1)
+                {
+                    postFee = item.postFee;
+                    break;
+                }
+            }
+            if (pf != null && pf.Count > 0)
+            {
+                return response.Success(pf, postFee);
+            }
         }
         return Sys_Result.GetR(1, "");
     }
