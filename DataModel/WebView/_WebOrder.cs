@@ -176,7 +176,7 @@ namespace Seascape.Data.WebView
                                 addr = r["addr"].ToString(),
                                 tel = r["tel"].ToString(),
                                 contact = r["contact"].ToString(),
-                                aId = Convert.ToInt16(r["aId"]),
+                                pId = Convert.ToInt16(r["pId"]),
                                 postFee = Convert.ToInt16(r["postFee"]),
                                 memo = r["memo"].ToString(),
                                 subPrice = Math.Round(Convert.ToDouble(r["subPrice"].ToString()), 2)
@@ -229,6 +229,51 @@ namespace Seascape.Data.WebView
                 }
                 return w;
             }
+        }
+
+        /// <summary>
+        /// 库存处理
+        /// </summary>
+        /// <param name="orderNo"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public bool GetProductStock(string orderNo,int type)
+        {
+            bool stock = false;
+            string sql = "select * from t_orderPList where orderNo = '" + orderNo + "' and enable = 0";
+            try
+            {
+                using (DataTable dt = helper.GetDataTable(sql))
+                {
+                    if (dt != null && dt.Rows.Count > 0)
+                    {
+                        foreach (DataRow r in dt.Rows)
+                        {
+                            orderPList b = new orderPList
+                            {
+                                orderNo = r["orderNo"].ToString(),
+                                price = Math.Round(Convert.ToDouble(r["price"]), 2),
+                                pid = Convert.ToInt16(r["pid"]),
+                                pNum = Convert.ToInt16(r["pNum"]),
+                                pName = r["pName"].ToString(),
+                                unitNo = r["unitNo"].ToString(),
+                                isEvaluate = Convert.ToInt16(r["isEvaluate"])
+                            };
+                            if (type == 0)
+                            {
+                                var o = new
+                                {
+
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+            }
+            return stock;
         }
     }
 }

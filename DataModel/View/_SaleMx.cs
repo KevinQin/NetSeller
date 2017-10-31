@@ -24,15 +24,20 @@ namespace Seascape.Data
             {
                 if (dt != null && dt.Rows.Count > 0)
                 {
-                    Dictionary<string, Double> Dic = new _Unit().GetUnitDic();
+                    Dictionary<string, unit> Dic = new _Unit().GetUnitDicObj();
                     foreach (DataRow r in dt.Rows)
                     {
                         saleMx o = new saleMx()
                         {
-                            pid = Convert.ToInt16(r["pid"]),
+                            unitNo = r["unitNo"].ToString(),
                             pNum = Convert.ToInt32(r["pNum"])
                         };
-                        o.product = new _Product().GetProductInfo(o.pid);
+                        if (Dic.ContainsKey(o.unitNo))
+                        {
+                            o.unit = Dic[o.unitNo];
+                            o.product = new _Product().GetProductInfo(o.unit.pId);
+                        }
+                        
                         lo.Add(o);
                     }
                 }

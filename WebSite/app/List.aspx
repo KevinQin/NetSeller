@@ -20,11 +20,12 @@
             <div class="page__hd">
                 <div class="search-bar">
                     <input type="text" placeholder="喜欢的商品" value="" id="txtKeyWord" />
-                    <a href="javascript:;">搜索</a>
+                    <a href="javascript:;" id="lnkSearch">搜索</a>
                 </div>
             </div>
             <div class="page__bd" style="height:100%;">
                 <div class="product-list"><ul></ul></div>
+                <div class="product-list" style="display:none;"><ul></ul></div>
             </div> 
             <div class="shopCarIcon">
                 <i class="icon iconfont icon-shopcart10"></i>

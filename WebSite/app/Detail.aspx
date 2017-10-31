@@ -48,4 +48,3 @@
 <script src="script/seller.js"></script>
 <script src="script/WeChat.js"></script>
 </html>
-

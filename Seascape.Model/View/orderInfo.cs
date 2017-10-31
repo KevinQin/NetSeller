@@ -43,7 +43,7 @@ namespace Seascape.Model
         public DateTime sendDate { get; set; }
         public DateTime sendOn { get; set; }
         public int oType { get; set; }
-        public int aId { get; set; }
+        public int pId { get; set; }
         public string activeName { get; set; }
         public string sourceName { get; set; }
         public int isPrint { get; set; }

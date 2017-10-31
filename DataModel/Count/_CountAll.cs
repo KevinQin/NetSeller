@@ -51,40 +51,49 @@ namespace Seascape.Data
             try
             {
                 //订单数
-                c.orderNum = Convert.ToInt16(helper.GetOne("SELECT count(id) as t from t_order where date(addOn) = '" + Date + "' and state < 9 " + keyWord));
+                c.orderNum = Convert.ToInt16(helper.GetOne("SELECT count(id) as t from t_order where date(addOn) = '" + Date + "' and state < 9 and state > 0 " + keyWord));
+                //会员特权订单数
+                c.vipProduct = Convert.ToInt16(helper.GetOne("SELECT count(id) as t from t_order where date(addOn) = '" + Date + "' and state < 9 and state > 0 and pId > 0 " + keyWord));
                 //产品件数
-                c.productNum = Convert.ToInt16(helper.GetOne("Select sum(pNum) as p from t_orderPlist where orderNo in(SELECT orderNo from t_order where date(addOn) = '" + Date + "' and state < 9 " + keyWord + ") and enable = 0"));
-                //VIP会员数
-                c.flowerNum = Convert.ToInt16(helper.GetOne("SELECT count(distinct fid) as t from t_order where date(addOn) = '" + Date + "' and state < 9 " + keyWord));
-                c.newF = Convert.ToInt16(helper.GetOne("SELECT count(id) as t from t_flower where date(addOn) = '" + Date + "' and enable = 0 " + keyWord));
+                try
+                {
+                    c.productNum = Convert.ToInt16(helper.GetOne("Select sum(pNum) as p from t_orderPlist where orderNo in(SELECT orderNo from t_order where date(addOn) = '" + Date + "' and state < 9 and state > 0 " + keyWord + ") and enable = 0"));
+                }
+                catch
+                {
+                    c.productNum = 0;
+                }
+                //新增用户数
+                //c.flowerNum = Convert.ToInt16(helper.GetOne("SELECT count(distinct fid) as t from t_order where date(addOn) = '" + Date + "' and state < 9 " + keyWord));
+                c.newF = Convert.ToInt16(helper.GetOne("SELECT count(id) as t from t_user where date(addOn) = '" + Date + "' and isSubcribe = 1 " + keyWord));
                 //金额总计
                 try
                 {
-                    c.price = Convert.ToDouble(helper.GetOne("SELECT sum(allPrice) as t from t_order where date(addOn) = '" + Date + "' and state < 9" + keyWord));
+                    c.price = Convert.ToDouble(helper.GetOne("SELECT sum(allPrice) as t from t_order where date(addOn) = '" + Date + "' and state < 9 and state > 0 " + keyWord));
                 }
                 catch
                 {
                     c.price = 0;
                 }
 
-                c.cb = getCb(Date, sourceId, Dic);
-                //运费总计
+                //c.cb = getCb(Date, sourceId, Dic);
+                //金币总计
                 try
                 {
-                    c.yf = Convert.ToDouble(helper.GetOne("SELECT dbfee+yfee+thfee from t_fee where date(fDate) = '" + Date + "' and enable = 0" + keyWord));
+                    c.coin = Convert.ToDouble(helper.GetOne("SELECT sum(subPrice) as t from t_order where date(addOn) = '" + Date + "' and state < 9 and state > 0 " + keyWord));
                 }
                 catch
                 {
-                    c.yf = 0;
+                    c.coin = 0;
                 }
 
                 try
                 {
-                    c.lr = c.price - c.yf - c.cb;
+                    c.ysPrice = c.price - c.coin;
                 }
                 catch
                 {
-                    c.lr = 0;
+                    c.ysPrice = 0;
                 }
 
                 c.dates = Convert.ToDateTime(Date);
@@ -132,12 +141,11 @@ namespace Seascape.Data
                                     dates = Convert.ToDateTime(r["dates"]),
                                     orderNum = Convert.ToInt16(r["orderNum"]),
                                     productNum = Convert.ToInt16(r["productNum"]),
-                                    flowerNum = Convert.ToInt16(r["flowerNum"]),
                                     newF = Convert.ToInt16(r["newF"]),
                                     price = Convert.ToDouble(r["price"]),
-                                    cb = Convert.ToDouble(r["cb"]),
-                                    yf = Convert.ToDouble(r["yf"]),
-                                    lr = Convert.ToDouble(r["lr"]),
+                                    coin = Convert.ToDouble(r["coin"]),
+                                    ysPrice = Convert.ToDouble(r["ysPrice"]),
+                                    vipProduct = Convert.ToInt32(r["vipProduct"]),
                                     addOn = Convert.ToDateTime(r["addon"])
                                 };
                                 dic.Add(Convert.ToDateTime(r["dates"]).ToString("yyyy-MM-dd"), c);

@@ -136,11 +136,11 @@ namespace Seascape.Data
                                 uImg = r["uImg"].ToString(),
                                 addOn = Convert.ToDateTime(r["addOn"]),
                                 unitNo = r["unitNo"].ToString(),
-                                fID = Convert.ToInt16(r["isJc"]),
+                                fID = Convert.ToInt16(r["fID"]),
                                 fName = r["fName"].ToString(),
-                                sID = Convert.ToInt16(r["jcNum"]),
+                                sID = Convert.ToInt16(r["sID"]),
                                 sName = r["sName"].ToString(),
-                                pNo = r["jcUnitNo"].ToString()
+                                pNo = r["pNo"].ToString()
                             };
                         }
                     }
@@ -181,6 +181,43 @@ namespace Seascape.Data
                         if (!Dic.ContainsKey(r["unitNo"].ToString()))
                         {
                             Dic.Add(r["unitNo"].ToString(), Convert.ToDouble(r["jPrice"]));
+                        }
+                    }
+                }
+            }
+            return Dic;
+        }
+
+        public Dictionary<string, unit> GetUnitDicObj()
+        {
+            Dictionary<string, unit> Dic = new Dictionary<string, unit>();
+            string sql = "select * from t_unit";
+            using (DataTable dt = helper.GetDataTable(sql))
+            {
+                if (dt != null && dt.Rows.Count > 0)
+                {
+                    foreach (DataRow r in dt.Rows)
+                    {
+                        if (!Dic.ContainsKey(r["unitNo"].ToString()))
+                        {
+                            unit lu = new unit()
+                            {
+                                id = Convert.ToInt16(r["id"]),
+                                pId = Convert.ToInt16(r["pId"]),
+                                price = Convert.ToDouble(r["price"]),
+                                mPrice = Convert.ToDouble(r["mPrice"]),
+                                uNum = Convert.ToInt16(r["uNum"]),
+                                sNum = Convert.ToInt16(r["sNum"]),
+                                uImg = r["uImg"].ToString(),
+                                addOn = Convert.ToDateTime(r["addOn"]),
+                                unitNo = r["unitNo"].ToString(),
+                                fID = Convert.ToInt16(r["fID"]),
+                                fName = r["fName"].ToString(),
+                                sID = Convert.ToInt16(r["sID"]),
+                                sName = r["sName"].ToString(),
+                                pNo = r["pNo"].ToString()
+                            };
+                            Dic.Add(r["unitNo"].ToString(), lu);
                         }
                     }
                 }

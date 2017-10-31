@@ -16,5 +16,7 @@ namespace Seascape.Model
         public string openId { get; set; }
         public string srcOpenId { get; set; }
         public int state { get; set; }
+        public string memo { get; set; }
+        public DateTime operOn { get; set; }
     }
 }

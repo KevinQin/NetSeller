@@ -14,6 +14,7 @@ namespace Seascape.Model.WebView
         public string desp { get; set; }
         public int storeNum { get; set; }
         public string pInfo { get; set; }
+        public int pType { get; set; }
         public List<string> imgUrl { get; set; }
         public UnitFWeb unit { get; set; }
         /*

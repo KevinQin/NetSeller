@@ -11,15 +11,11 @@ namespace Seascape.Model
         public int id { get; set; }
         public DateTime dates { get; set; }
         /// <summary>
-        /// 订单数
+        /// 订单总数
         /// </summary>
         public int orderNum { get; set; }
         /// <summary>
-        /// VIP会员数
-        /// </summary>
-        public int flowerNum { get; set; }
-        /// <summary>
-        /// 件数
+        /// 销售产品件数
         /// </summary>
         public int productNum { get; set; }
         /// <summary>
@@ -27,17 +23,17 @@ namespace Seascape.Model
         /// </summary>
         public Double price { get; set; }
         /// <summary>
-        /// 成本总计
+        /// 金币抵扣总计
         /// </summary>
-        public Double cb { get; set; }
+        public Double coin { get; set; }
         /// <summary>
-        /// 运费总计
+        /// 应收总计
         /// </summary>
-        public Double yf { get; set; }
+        public Double ysPrice { get; set; }
         /// <summary>
-        /// 利润总计
+        /// 会员特权产品
         /// </summary>
-        public Double lr { get; set; }
+        public int vipProduct { get; set; }
         /// <summary>
         /// 新增用户数
         /// </summary>

@@ -19,7 +19,7 @@
         <div class="page detail-page tabbar js_show">
             <div class="page__hd">
                 <div class="stand-bar">
-                    <div class="back-col"></div>
+                    <div class="back-col"><i class="iconfont icon-arrowleft"></i></div>
                     <div class="title-col">购物车</div>
                     <div class="icon-col" data-act="edit" id="btnEdit">编辑</div>
                 </div>

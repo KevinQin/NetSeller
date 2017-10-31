@@ -31,6 +31,7 @@ namespace Seascape.Data
                 {
                     try
                     {
+                        Dictionary<int, string> Dic = new _AdminUser().GetAdminUserDic();
                         foreach (DataRow r in dt.Rows)
                         {
                             sysLog s = new sysLog
@@ -38,7 +39,7 @@ namespace Seascape.Data
                                 orderNo = r["orderNo"].ToString(),
                                 addOn = Convert.ToDateTime(r["addOn"]),
                                 uid = Convert.ToInt32(r["uid"]),
-                                workNo = r["workNo"].ToString(),
+                                adminId = Convert.ToInt16(r["adminId"]),
                                 adminName = r["adminName"].ToString(),
                                 content = r["content"].ToString(),
                                 lType = Convert.ToInt16(r["lType"]),
@@ -46,12 +47,11 @@ namespace Seascape.Data
                             };
                             if (s.lType > 0 && s.lType < 5)
                             {
-                                if (s.workNo.Length > 0)
+                                if (s.adminId > 0)
                                 {
-                                    List<employee> le = new _Employee().GetEmployeeList(-1, s.workNo, "");
-                                    if (le != null && le.Count > 0)
+                                    if (Dic.ContainsKey(s.adminId))
                                     {
-                                        s.adminName = "[" + s.workNo + "]" + le[0].name;
+                                        s.adminName = "[后台]" + Dic[s.adminId];
                                     }
                                 }
                             }
@@ -59,7 +59,18 @@ namespace Seascape.Data
                             {
                                 if (s.lType == 5) 
                                 {
-                                    s.adminName = "[" + s.workNo + "]" + s.adminName;
+                                    s.adminName = "[后台]" + s.adminName;
+                                }
+                                else
+                                {
+                                    if (s.uid > 0)
+                                    {
+                                        user u = new _User().GetUser("", "", s.uid);
+                                        if (u != null)
+                                        {
+                                            s.adminName = "[用户]" + u.contact;
+                                        }
+                                    }
                                 }
                                 
                             }

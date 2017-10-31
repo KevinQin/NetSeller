@@ -36,7 +36,7 @@ namespace Seascape.Data
             {
                 if (dt != null && dt.Rows.Count > 0)
                 {
-                    Dictionary<string, Double> Dic = new _Unit().GetUnitDic();
+                    //Dictionary<string, Double> Dic = new _Unit().GetUnitDic();
                     foreach (DataRow r in dt.Rows)
                     {
                         finance o = new finance();
@@ -53,8 +53,9 @@ namespace Seascape.Data
                             o.payType = Convert.ToInt16(r["payType"].ToString());
                             o.subPrice = Math.Round(Convert.ToDouble(r["subPrice"].ToString()), 2);
                             o.price = Convert.ToDouble(r["price"].ToString());
-                            o.cbPrice = GetCbPrice(o.orderNo, Dic);
-                            user u = new _User().GetUser("", "", o.userId);
+                            //o.cbPrice = GetCbPrice(o.orderNo, Dic);
+                            //user u = new _User().GetUser("", "", o.userId);
+                            o.userName = r["contact"].ToString() + "<br/>" + r["tel"].ToString();
                         }
                         catch
                         {

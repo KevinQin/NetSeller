@@ -9,6 +9,8 @@ namespace Seascape.Model
     public class smsCode
     {
         public int id { get; set; }
+        public int uid { get; set; }
+        public string openId { get; set; }
         public string mobile { get; set; }
         public string code { get; set; }
         public DateTime addOn { get; set; }

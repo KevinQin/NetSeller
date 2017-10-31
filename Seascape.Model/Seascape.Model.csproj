@@ -71,7 +71,9 @@
     <Compile Include="uLog.cs" />
     <Compile Include="unit.cs" />
     <Compile Include="user.cs" />
+    <Compile Include="userBank.cs" />
     <Compile Include="View\classInfo.cs" />
+    <Compile Include="View\CoinList.cs" />
     <Compile Include="View\custom.cs" />
     <Compile Include="View\evaluateInfo.cs" />
     <Compile Include="View\fxCount.cs" />

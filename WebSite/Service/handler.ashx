@@ -37,7 +37,7 @@ public class Handler : IHttpHandler {
     //成为VIP会员要有的好友数
     public static int vipUserNum = 9;
 
-    public static string DefaultWrokNo = "100";
+    public static string DefaultOpenId = "100";
     public static string _orderNo = "";
     public static Response response;
     public static Double FyRadio = 0.1;
@@ -129,7 +129,7 @@ public class Handler : IHttpHandler {
                     Result = GetProductInfo(c);//获取产品详情
                     break;
                 case 107:
-                    Result = CancelOrder(c);//取消订单
+                    Result = UpdateOrder(c);//修改订单状态
                     break;
                 case 108:
                     Result = GetUnitPrice(c);//获取库存价格列表
@@ -163,6 +163,24 @@ public class Handler : IHttpHandler {
                     break;
                 case 118:
                     Result = ToCash(c);//申请提现
+                    break;
+                case 119:
+                    Result = operUserBank(c);//添加修改用户银行卡
+                    break;
+                case 120:
+                    Result = GetUserBank(c);//获取用户银行卡信息
+                    break;
+                case 121:
+                    Result = SendSmsCode(c);//获取短信验证码
+                    break;
+                case 122:
+                    Result = GetContentList(c);//获取广告列表
+                    break;
+                case 123:
+                    Result = GetContentInfo(c);//获取广告详情
+                    break;
+                case 124:
+                    Result = SaleService(c);//售后服务
                     break;
             }
         }
@@ -327,6 +345,7 @@ public class Handler : IHttpHandler {
         
         //购物车列表
         string shopping = string.IsNullOrEmpty(c.Request["shopping"]) ? "" : c.Request["shopping"].ToString();
+        int isVip = string.IsNullOrEmpty(c.Request["isVip"]) ? 0 : Convert.ToInt16(c.Request["isVip"].ToString());
       
         //获取来源信息
         int sourceId = 0;
@@ -334,24 +353,32 @@ public class Handler : IHttpHandler {
         user u = new _User().GetUser(openId, "", 0);
         if (u != null)
         {
-            try
+            if (u.id == uid)
             {
-                uType = u.uType;
-                sourceId = u.sourceId;
+                try
+                {
+                    uType = u.uType;
+                    sourceId = u.sourceId;
+                }
+                catch
+                {
+                    sourceId = 0;
+                }                
             }
-            catch
+            else
             {
-                sourceId = 0;
+                return response.Fail("用户不存在"); 
             }
         }
         else
         {
             return response.Fail("用户不存在");
         }
-               
-        string orderNo = DateTime.Now.ToString("yyMMddHHmmss") + uid.ToString().PadLeft(4,'0');
+              
+        string orderNo = DateTime.Now.ToString("yyMMddHHmmss") + uid.ToString().PadLeft(5,'0');
         
         //检查库存
+        int pid = 0;//会员特权产品ID
         Double tempPrice = 0;
         string[] pArr = shopping.Split(',');
         Dictionary<int, string> ProductDic = new Dictionary<int, string>();
@@ -369,6 +396,7 @@ public class Handler : IHttpHandler {
                     {
                         if (uitem.unitNo == iArr[1])
                         {
+                            pid = uitem.pId;
                             tempunit = uitem;
                             if (!ProductDic.ContainsKey(pd.id))
                             {
@@ -405,6 +433,19 @@ public class Handler : IHttpHandler {
             }
         }
 
+        if (pid > 0 && isVip > 0)
+        {
+            int orderNum = new _OrderInfo().GetActiveOrder(uid, pid);
+            if (orderNum > 0)
+            {
+                return response.Fail("每个特权商品只能购买一次，您已购买过！");
+            }
+        }
+        else
+        {
+            pid = 0;
+        }
+
         if (subPrice > 0)
         {
             Double Coin = new _Coin().GetCoin(openId);
@@ -432,8 +473,8 @@ public class Handler : IHttpHandler {
         
         
         int isPay = 0;
-        int payType = 1;
-
+        int payType = 0;
+        
         //if (p != null)
         {
             order o = new order
@@ -453,14 +494,19 @@ public class Handler : IHttpHandler {
                 payType = payType,
                 //基础信息
                 addOn = DateTime.Now,
-                workNo = DefaultWrokNo,
                 sendDate = DateTime.Now.AddDays(1).Date,
                 serviceId = 1,
                 oType = oType,
+                pId = pid,
                 orderNo = orderNo
             };
-            
 
+            if (o.allPrice == o.subPrice)
+            {
+                o.isPay = 1;
+                o.payOn = DateTime.Now;
+                o.state = 1;
+            }
 
             if (o.price < 0)
             {
@@ -603,7 +649,7 @@ public class Handler : IHttpHandler {
                     SendTemplateMessage(c, tmo, new TMsg_Order().Key(), u.openId, BaseUrl + detailUrl + "?orderno=" + o.orderNo + "&ot=1", MsgContent);
                     */
                     TMsg_Work tmo = new TMsg_Work().GetMessageBody("尊敬的" + o.contact + "，您好，您的订单已下单完成，订单总价：" + Math.Round(o.allPrice,1) + "，采购明细：" + productMx + "，感谢您选择万品微店！", order_t.id.ToString(), DateTime.Now.ToString("yyyy-MM-dd HH:mm"), "[万品微店]", out MsgContent);
-                    Comm.SendTemplateMessage(c, tmo, new TMsg_Work().Key(), u.openId, BaseUrl + "orderlist.html", MsgContent);
+                    Comm.SendTemplateMessage(c, tmo, new TMsg_Work().Key(), u.openId, BaseUrl + "orderdetail.aspx?orderno=" + o.orderNo, MsgContent);
                     //AddLog(o.orderNo, "给用户发送模板消息：" + MsgContent, 0, DefaultWrokNo, 2);
                 }
                 //首次下单，绑定用户联系人和联系电话
@@ -619,18 +665,19 @@ public class Handler : IHttpHandler {
                         new Main().UpdateDb(ou, "t_user", "id=" + u.id);
                     }
                 }
-                
+
                 var temp_o = new
                 {
-                    Return = 0,
-                    Msg = "添加成功",
-                    OrderNo = o.orderNo
+                    OrderNo = o.orderNo,
+                    isPay = o.isPay,
+                    price = o.allPrice - o.subPrice,
+                    isSubcribe = u.isSubscribe
                 };
                 //return JsonMapper.ToJson(temp_o);
-                return response.Success(o.orderNo);
+                return response.Success(temp_o);
             }
         }
-        return Sys_Result.GetR(1, "");
+        return response.Fail("保存订单失败，请稍后再试");
     }
 
    
@@ -687,10 +734,7 @@ public class Handler : IHttpHandler {
                     sql = "select * from t_coin where openId = '" + openId + "' and cType = " + cType + " order by addOn desc limit " + Convert.ToInt16((page - 1) * perPage) + "," + perPage;
                 }
                 List<CoinInfo> lo = new _Coin().GetCoinList(sql);
-                if (lo != null && lo.Count > 0)
-                {
-                    return response.Success(lo);
-                }
+                return response.Success(lo);
             }
         }
         return Sys_Result.GetR(1, "");
@@ -710,6 +754,7 @@ public class Handler : IHttpHandler {
         {
             if (page == 0)
             {
+                page = 1;
                 perPage = 10000;
             }
             user u = new _User().GetUser(openId, "", 0);
@@ -780,7 +825,7 @@ public class Handler : IHttpHandler {
     public string GetHbList(HttpContext c)
     {
         int uid = string.IsNullOrEmpty(c.Request["uid"]) ? 0 : Convert.ToInt16(c.Request["uid"].ToString());
-        string sql = "select * from t_content where cType = 1 and enable = 0 order by isHot desc,addOn desc";
+        string sql = "select * from t_content where cType = 1 and enable = 1 order by isHot desc,addOn desc";
         List<WebHb> lo = new _Content().GetHbList(sql);
         if (lo != null && lo.Count > 0)
         {
@@ -798,10 +843,10 @@ public class Handler : IHttpHandler {
     public string GetActiveNum(HttpContext c)
     {
         int uid = string.IsNullOrEmpty(c.Request["uid"]) ? 0 : Convert.ToInt32(c.Request["uid"]);
-        int aid = string.IsNullOrEmpty(c.Request["aid"]) ? 0 : Convert.ToInt32(c.Request["aid"]);
-        if (uid > 0 && aid > 0)
+        int pid = string.IsNullOrEmpty(c.Request["pid"]) ? 0 : Convert.ToInt32(c.Request["pid"]);
+        if (uid > 0 && pid > 0)
         {
-            int orderNum = new _OrderInfo().GetActiveOrder(uid, aid);
+            int orderNum = new _OrderInfo().GetActiveOrder(uid, pid);
             if (orderNum > 0)
             {
                 return Sys_Result.GetR(1, "");
@@ -844,6 +889,13 @@ public class Handler : IHttpHandler {
         int uid = string.IsNullOrEmpty(c.Request["uid"]) ? 0 : Convert.ToInt32(c.Request["uid"]);
         Double cash = string.IsNullOrEmpty(c.Request["cash"]) ? 0 : Convert.ToInt32(c.Request["cash"]);
         string openId = string.IsNullOrEmpty(c.Request["openId"]) ? "" : c.Request["openId"].ToString();
+        string code = string.IsNullOrEmpty(c.Request["code"]) ? "" : c.Request["code"].ToString();
+        string mobile = string.IsNullOrEmpty(c.Request["mobile"]) ? "" : c.Request["mobile"].ToString();
+        string Code_Temp = new _SmsCode().GetSmsCode(mobile);
+        if (code.Length < 6 || Code_Temp.Length < 6 || code != Code_Temp)
+        {
+            return response.Fail("验证码错误");
+        }
         if (uid > 0 && openId.Length > 0)
         {
             user u = new _User().GetUser(openId, "", 0);
@@ -866,7 +918,7 @@ public class Handler : IHttpHandler {
                         };
                         if (new Main().AddToDb(co, "t_coin"))
                         {
-                            return response.Success("提交申请完成，请按说明操作");        
+                            return response.Success("提交申请完成");        
                         }
                     }
                     
@@ -874,6 +926,98 @@ public class Handler : IHttpHandler {
             }
         }
         return Sys_Result.GetR(0, "");
+    }
+
+    /// <summary>
+    /// 发送短信
+    /// </summary>
+    /// <param name="c"></param>
+    /// <returns></returns>
+    public string SendSmsCode(HttpContext c)
+    {
+        string mobile = c.Request["mobile"] == null ? "" : c.Request["mobile"].ToString();
+        string openID = c.Request["openID"] == null ? "" : c.Request["openID"].ToString();
+        int uId = string.IsNullOrEmpty(c.Request["uId"]) ? 0 : Convert.ToInt32(c.Request["uId"]);
+        int Code = new Random().Next(100000, 999999);
+        if (uId > 0 && openID.Length > 0 && mobile.Length > 0)
+        {
+            user u = new _User().GetUser(openID, "", 0);
+            if (u != null)
+            {
+                if (u.id == uId)
+                {
+                    try
+                    {
+                        int SmsCodeNum_Day = new _SmsCode().GetSmsCount(mobile);
+                        if (SmsCodeNum_Day > 5)
+                        {
+                            return Sys_Result.GetR(1, "请勿频繁获取验证码");
+                        }
+                        else
+                        {
+                            //cn.com.seascape.emp.SMSAPI s = new cn.com.seascape.emp.SMSAPI();
+                            //s.SendMessage(smsUser, smsPass, mobile, smsMsg.Replace("{Code}", Code.ToString()), "");
+                            //string PostUrl = "http://59.49.19.109:8016/weixin/TrainHandler.ashx?Fn=3&mobile=" + mobile + "&msg=" + smsMsg.Replace("{Code}", Code.ToString());
+                            //BasicTool.webRequest(PostUrl);
+                            //Sms.sendSms(mobile, "");
+                            smsCode sc = new smsCode
+                            {
+                                code = Code.ToString(),
+                                mobile = mobile,
+                                openId = openID,
+                                uid = uId,
+                                addOn = DateTime.Now
+                            };
+                            if (new Main().AddToDb(sc, "t_smsCode"))
+                            {
+                                return response.Success("OK");
+                            }
+                        }
+                    }
+                    catch
+                    {
+
+                    }                    
+                }
+            }
+        }
+        return Sys_Result.GetR(1, "短信发送失败，请稍后再试");
+    }
+
+    /// <summary>
+    /// 获取广告列表
+    /// </summary>
+    /// <param name="c"></param>
+    /// <returns></returns>
+    public string GetContentList(HttpContext c)
+    {
+        string sql = "select * from t_content where enable > 0 and cType = 0 order by isHot desc, addOn desc limit 0,4";
+        {
+            List<content> lo = new _Content().GetContentList(sql);
+            if (lo != null && lo.Count > 0)
+            {
+                return response.Success(lo);
+            }
+        }
+        return Sys_Result.GetR(1, "");
+    }
+
+    /// <summary>
+    /// 获取广告详情
+    /// </summary>
+    /// <param name="c"></param>
+    /// <returns></returns>
+    public string GetContentInfo(HttpContext c)
+    {
+        int id = string.IsNullOrEmpty(c.Request["id"]) ? 0 : Convert.ToInt32(c.Request["id"]);
+        {
+            content content = new _Content().GetContent(id);
+            if (content != null)
+            {
+                return response.Success(content);
+            }
+        }
+        return Sys_Result.GetR(1, "");
     }
 
     /// <summary>
@@ -896,7 +1040,7 @@ public class Handler : IHttpHandler {
                     string ResultUrl = GetCreateHBUrl(c, uid, hbId);
                     if (ResultUrl.Length > 0)
                     {
-                        return response.Success(ResultUrl);
+                        return response.Success(ResultUrl, hbId);
                     }
                 }
             }
@@ -1341,6 +1485,89 @@ public class Handler : IHttpHandler {
         return Sys_Result.GetR(1, "");
     }
 
+    /// <summary>
+    /// 添加银行卡信息
+    /// </summary>
+    /// <param name="c"></param>
+    /// <returns></returns>
+    public string operUserBank(HttpContext c)
+    {
+        int uId = string.IsNullOrEmpty(c.Request["uId"]) ? 0 : Convert.ToInt16(c.Request["uId"].ToString());
+        string openId = string.IsNullOrEmpty(c.Request["openId"]) ? "" : c.Request["openId"].ToString();
+        string mobile = string.IsNullOrEmpty(c.Request["mobile"]) ? "" : c.Request["mobile"].ToString();
+        string cardName = string.IsNullOrEmpty(c.Request["cardName"]) ? "" : c.Request["cardName"].ToString();
+        string cardNo = string.IsNullOrEmpty(c.Request["cardNo"]) ? "" : c.Request["cardNo"].ToString();
+        string userName = string.IsNullOrEmpty(c.Request["userName"]) ? "" : c.Request["userName"].ToString();
+
+        cardName = c.Server.UrlDecode(cardName);
+        userName = c.Server.UrlDecode(userName);
+        
+        if (uId > 0 && openId.Length > 0)
+        {
+            user u = new _User().GetUser(openId, "", 0);
+            if (u.id == uId)
+            {
+                userBank ub = new _UserBank().GetBankInfo(openId);
+                if (ub == null)
+                {
+                    ub = new userBank()
+                    {
+                        cardName = cardName,
+                        cardNo = cardNo,
+                        userName = userName,
+                        openId = openId,
+                        uid = uId,
+                        addOn = DateTime.Now,
+                        mobile = mobile
+                    };
+                    if (new Main().AddToDb(ub, "t_user_bank"))
+                    {
+                        return response.Success("OK");
+                    }
+                }
+                else
+                {
+                    var o = new
+                    {
+                        cardName = cardName,
+                        cardNo = cardNo,
+                        userName = userName,
+                        mobile = mobile
+                    };
+                    if (new Main().UpdateDb(o, "t_user_bank", "openId = '" + openId + "'"))
+                    {
+                        return response.Success("OK");
+                    }  
+                }
+            }
+        }
+        return response.Fail("更新失败，请稍后再试！");
+    }
+
+    /// <summary>
+    /// 获取用户银行卡信息
+    /// </summary>
+    /// <param name="c"></param>
+    /// <returns></returns>
+    public string GetUserBank(HttpContext c)
+    {
+        int uid = string.IsNullOrEmpty(c.Request["uid"]) ? 0 : Convert.ToInt32(c.Request["uid"]);
+        string openId = string.IsNullOrEmpty(c.Request["openId"]) ? "" : c.Request["openId"];
+        if (uid > 0 && openId.Length > 0)
+        {
+            user u = new _User().GetUser(openId, "", 0);
+            if (u.id == uid)
+            {
+                Double coin = new _Coin().GetCoin(openId);
+                userBank ub = new _UserBank().GetBankInfo(openId);
+                if (ub != null)
+                {
+                    return response.Success(ub,coin);
+                }
+            }
+        }
+        return response.Fail("无记录");
+    }
     
     /// <summary>
     /// 手机绑定
@@ -1448,7 +1675,7 @@ public class Handler : IHttpHandler {
         {
             Double price = lo[0].allPrice;
             Double subPrice = lo[0].subPrice;
-            price = price - subPrice - lo[0].wxCardFee;
+            price = price - subPrice;
             string body = "小食品";
             int userId = lo[0].userId;
             user u = new _User().GetUser("", "", userId);
@@ -1513,9 +1740,20 @@ public class Handler : IHttpHandler {
             sb.Append("    \"button\": [");
             sb.Append("        {");
             sb.Append("            \"type\": \"view\", ");
-            sb.Append("            \"name\": \"立即下单\", ");
-            sb.Append("            \"url\": \"https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxc79aa72caccf9da2&redirect_uri=http%3a%2f%2fshoes.4009990351.com%2fdefault.aspx&response_type=code&scope=snsapi_userinfo&state=i#wechat_redirect\"");
+            sb.Append("            \"name\": \"进入商城\", ");
+            sb.Append("            \"url\": \"https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx72bba0f3cbe6e8ca&redirect_uri=http%3a%2f%2fs.seascapeapp.cn%2fapp%2findex.aspx&response_type=code&scope=snsapi_userinfo&state=i#wechat_redirect\"");
             sb.Append("        }, ");
+            sb.Append("        {");
+            sb.Append("            \"type\": \"view\", ");
+            sb.Append("            \"name\": \"代言人\", ");
+            sb.Append("            \"url\": \"https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx72bba0f3cbe6e8ca&redirect_uri=http%3a%2f%2fs.seascapeapp.cn%2fapp%2fvippicture.aspx&response_type=code&scope=snsapi_userinfo&state=i#wechat_redirect\"");            
+            sb.Append("        }, ");
+            sb.Append("        {");
+            sb.Append("            \"type\": \"view\", ");
+            sb.Append("            \"name\": \"服务中心\", ");
+            sb.Append("            \"url\": \"https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx72bba0f3cbe6e8ca&redirect_uri=http%3a%2f%2fs.seascapeapp.cn%2fapp%2fuc.aspx&response_type=code&scope=snsapi_userinfo&state=i#wechat_redirect\"");                        
+            sb.Append("        }");
+            /*
             sb.Append("        {");
             sb.Append("           \"name\": \"优惠活动\", ");
             sb.Append("            \"sub_button\": [");            
@@ -1555,7 +1793,7 @@ public class Handler : IHttpHandler {
             sb.Append("                    \"name\": \"我的订单\", ");
             sb.Append("                    \"url\": \"https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxc79aa72caccf9da2&redirect_uri=http%3a%2f%2fshoes.4009990351.com%2forder.html&response_type=code&scope=snsapi_userinfo&state=i#wechat_redirect\"");
             sb.Append("                }, ");
-            */
+            
             sb.Append("                {");
             sb.Append("                    \"type\": \"view\", ");
             sb.Append("                    \"name\": \"订单导入\", ");
@@ -1578,6 +1816,7 @@ public class Handler : IHttpHandler {
             sb.Append("                }");
             sb.Append("            ]");
             sb.Append("        }");
+            */ 
             sb.Append("    ]");
             sb.Append("}");
             string ACCESS_TOKEN = Comm.Get_Access_Token(c);
@@ -1625,6 +1864,7 @@ public class Handler : IHttpHandler {
         int pid = string.IsNullOrEmpty(c.Request["pid"]) ? 0 : Convert.ToInt16(c.Request["pid"].ToString());
         int page = string.IsNullOrEmpty(c.Request["page"]) ? 0 : Convert.ToInt16(c.Request["page"].ToString());
         int type = string.IsNullOrEmpty(c.Request["type"]) ? 0 : Convert.ToInt16(c.Request["type"].ToString());
+        string key = string.IsNullOrEmpty(c.Request["key"]) ? "" : c.Request["key"].ToString();
         string keyword = "";
         if (pid > 0)
         {
@@ -1633,6 +1873,10 @@ public class Handler : IHttpHandler {
         if (type > 0)
         {
             keyword = " and sign like '%" + type + ",%'";
+        }
+        if (key.Length > 0)
+        {
+            keyword = " and pName like '%" + key + "%' ";
         }
         string sql = "select * from t_product where state = 1 " + keyword + " order by isHot desc,allNum desc";
         if (type == 100)
@@ -1695,17 +1939,26 @@ public class Handler : IHttpHandler {
             List<postForWeb> pf = new _ProductFWeb().GetPostInfo(pids);
             List<post> post = new _Post().GetPost();
             Double postFee = 0;
+            string provice = "";
             foreach (post item in post)
             {
                 if (item.postType == 1)
                 {
                     postFee = item.postFee;
-                    break;
+                }
+                if (item.postType == 2)
+                {
+                    provice = item.provice;
                 }
             }
             if (pf != null && pf.Count > 0)
             {
-                return response.Success(pf, postFee);
+                var o = new
+                {
+                    postFee = postFee,
+                    provice = provice
+                };
+                return response.Success(pf, o);
             }
         }
         return Sys_Result.GetR(1, "");
@@ -1716,7 +1969,7 @@ public class Handler : IHttpHandler {
     /// </summary>
     /// <param name="c"></param>
     /// <returns></returns>
-    public string CancelOrder(HttpContext c)
+    public string UpdateOrder(HttpContext c)
     {
         string OrderNo = c.Request["OrderNo"] == null ? "" : c.Request["OrderNo"].ToString().Replace("#", "");
         int State = string.IsNullOrEmpty(c.Request["State"]) ? -1 : Convert.ToInt16(c.Request["State"].ToString());
@@ -1734,23 +1987,67 @@ public class Handler : IHttpHandler {
                 };
                 if (new Main().UpdateDb(o, "t_order", "orderNo = '" + OrderNo + "'"))
                 {
-                    AddLog(OrderNo, "取消订单", uid, "", 0);
-                    //微信支付自动退款
-                    if (wo.isPay == 1)
+                    if (State == 8)
                     {
-                        try
+                        AddLog(OrderNo, "收货完成", uid, "", 0);
+                    }
+                    if (State == 9)
+                    {
+                        AddLog(OrderNo, "取消订单", uid, "", 0);
+                        //微信支付自动退款
+                        if (wo.isPay == 1)
                         {
-                            OrderRefund(wo);
-                            string MsgContent = "";
-                            TMsg_Work tmo = new TMsg_Work().GetMessageBody("订单取消完成", OrderNo, DateTime.Now.ToString("yyyy-MM-dd HH:mm"), "[感谢您的支持]", out MsgContent);
-                            Comm.SendTemplateMessage(c, tmo, new TMsg_Work().Key(), openId, BaseUrl + "/app/z_detail.html?no=" + OrderNo, MsgContent);
-                        }
-                        catch
-                        {
+                            try
+                            {
+                                OrderRefund(wo);
+                                string MsgContent = "";
+                                TMsg_Work tmo = new TMsg_Work().GetMessageBody("订单取消完成", OrderNo, DateTime.Now.ToString("yyyy-MM-dd HH:mm"), "[感谢您的支持]", out MsgContent);
+                                Comm.SendTemplateMessage(c, tmo, new TMsg_Work().Key(), openId, BaseUrl + "/app/z_detail.html?no=" + OrderNo, MsgContent);
+                            }
+                            catch
+                            {
 
+                            }
                         }
                     }
+
                 }
+                return Sys_Result.GetR(0, "OK");
+            }
+        }
+        return Sys_Result.GetR(1, "");
+    }
+
+
+    /// <summary>
+    /// 处理售后
+    /// </summary>
+    /// <param name="c"></param>
+    /// <returns></returns>
+    public string SaleService(HttpContext c)
+    {
+        string OrderNo = c.Request["OrderNo"] == null ? "" : c.Request["OrderNo"].ToString().Replace("#", "");
+        string unitNo = c.Request["unitNo"] == null ? "" : c.Request["unitNo"].ToString();
+        string openId = c.Request["openId"] == null ? "" : c.Request["openId"].ToString().Replace("#", "");
+        int uid = string.IsNullOrEmpty(c.Request["uid"]) ? 0 : Convert.ToInt16(c.Request["uid"].ToString());
+        if (OrderNo.Length > 0)
+        {
+            WebOrderInfo wo = new _WebOrder().GetOrderInfo(OrderNo);
+            user u = new _User().GetUser(openId, "", 0);
+            if (u != null && u.id == uid && wo != null)
+            {
+                string product = "";
+                foreach (WebOrderProduct item in wo.product)
+                {
+                    if (item.unitNo == unitNo)
+                    {
+                        product = item.pName + "[" + item.pNum + "*" + item.price + "]";
+                        break;
+                    }
+                }
+                string MsgContent = "";
+                TMsg_Work tmo = new TMsg_Work().GetMessageBody("客户[" + wo.contact + "," + wo.tel + "]申请售后服务,产品" + product, OrderNo, DateTime.Now.ToString("yyyy-MM-dd HH:mm"), "[感谢您的支持]", out MsgContent);
+                Comm.SendTemplateMessage(c, tmo, new TMsg_Work().Key(), DefaultOpenId, "", MsgContent);
                 return Sys_Result.GetR(0, "OK");
             }
         }

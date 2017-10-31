@@ -10,6 +10,7 @@ namespace Seascape.Model
     {
         public ProductInfo product { get; set; }
         public int pNum { get; set; }
-        public int pid { get; set; }
+        public string unitNo { get; set; }
+        public unit unit { get; set; }
     }
 }

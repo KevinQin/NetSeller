@@ -10,10 +10,10 @@ namespace Seascape.Data
     public class _OrderInfo:DbCenter
     {
        
-        public int GetActiveOrder(int uid,int aid)
+        public int GetActiveOrder(int uid,int pid)
         {
             int OrderNum = 0;
-            string sql = "select count(id) as t from t_order where userId = " + uid + " and aId = " + aid + " and state < 9";
+            string sql = "select count(id) as t from t_order where userId = " + uid + " and pId = " + pid + " and state < 9";
             try
             {
                 OrderNum = Convert.ToInt16(helper.GetOne(sql));
@@ -155,7 +155,7 @@ namespace Seascape.Data
                                 getWorker = r["getWorker"].ToString(),
                                 sendWorker = r["sendWorker"].ToString(),
                                 oType = Convert.ToInt16(r["oType"].ToString()),
-                                aId = Convert.ToInt16(r["aId"].ToString()),
+                                pId = Convert.ToInt16(r["pId"].ToString()),
                                 fid = Convert.ToInt16(r["fid"].ToString()),
                                 cityId = Convert.ToInt16(r["cityId"].ToString()),
                                 isPrint = Convert.ToInt16(r["isPrint"].ToString()),
@@ -254,7 +254,7 @@ namespace Seascape.Data
                                 getWorker = r["getWorker"].ToString(),
                                 sendWorker = r["sendWorker"].ToString(),
                                 oType = Convert.ToInt16(r["oType"].ToString()),
-                                aId = Convert.ToInt16(r["aId"].ToString()),
+                                pId = Convert.ToInt16(r["pId"].ToString()),
                                 fid = Convert.ToInt16(r["fid"].ToString()),
                                 cityId = Convert.ToInt16(r["cityId"].ToString()),
                                 isPrint = Convert.ToInt16(r["isPrint"].ToString()),
@@ -355,7 +355,7 @@ namespace Seascape.Data
                                 getWorker = r["getWorker"].ToString(),
                                 sendWorker = r["sendWorker"].ToString(),
                                 oType = Convert.ToInt16(r["oType"].ToString()),
-                                aId = Convert.ToInt16(r["aId"].ToString()),
+                                pId = Convert.ToInt16(r["pId"].ToString()),
                                 fid = Convert.ToInt16(r["fid"].ToString()),
                                 cityId = Convert.ToInt16(r["cityId"].ToString()),
                                 isPrint = Convert.ToInt16(r["isPrint"].ToString()),
@@ -440,7 +440,7 @@ namespace Seascape.Data
                                 getWorker = r["getWorker"].ToString(),
                                 sendWorker = r["sendWorker"].ToString(),
                                 oType = Convert.ToInt16(r["oType"].ToString()),
-                                aId = Convert.ToInt16(r["aId"].ToString()),
+                                pId = Convert.ToInt16(r["pId"].ToString()),
                                 fid = Convert.ToInt16(r["fid"].ToString()),
                                 cityId = Convert.ToInt16(r["cityId"].ToString()),
                                 isPrint = Convert.ToInt16(r["isPrint"].ToString()),
@@ -544,7 +544,7 @@ namespace Seascape.Data
                                 getWorker = r["getWorker"].ToString(),
                                 sendWorker = r["sendWorker"].ToString(),
                                 oType = Convert.ToInt16(r["oType"].ToString()),
-                                aId = Convert.ToInt16(r["aId"].ToString()),
+                                pId = Convert.ToInt16(r["pId"].ToString()),
                                 fid = Convert.ToInt16(r["fid"].ToString()),
                                 cityId = Convert.ToInt16(r["cityId"].ToString()),
                                 isPrint = Convert.ToInt16(r["isPrint"].ToString()),
@@ -656,7 +656,7 @@ namespace Seascape.Data
                                 getWorker = r["getWorker"].ToString(),
                                 sendWorker = r["sendWorker"].ToString(),
                                 oType = Convert.ToInt16(r["oType"].ToString()),
-                                aId = Convert.ToInt16(r["aId"].ToString()),
+                                pId = Convert.ToInt16(r["pId"].ToString()),
                                 fid = Convert.ToInt16(r["fid"].ToString()),
                                 cityId = Convert.ToInt16(r["cityId"].ToString()),
                                 isPrint = Convert.ToInt16(r["isPrint"].ToString()),
@@ -742,7 +742,7 @@ namespace Seascape.Data
                                 getWorker = r["getWorker"].ToString(),
                                 sendWorker = r["sendWorker"].ToString(),
                                 oType = Convert.ToInt16(r["oType"].ToString()),
-                                aId = Convert.ToInt16(r["aId"].ToString()),
+                                pId = Convert.ToInt16(r["pId"].ToString()),
                                 fid = Convert.ToInt16(r["fid"].ToString()),
                                 cityId = Convert.ToInt16(r["cityId"].ToString()),
                                 isPrint = Convert.ToInt16(r["isPrint"].ToString()),
@@ -829,7 +829,7 @@ namespace Seascape.Data
                                 getWorker = r["getWorker"].ToString(),
                                 sendWorker = r["sendWorker"].ToString(),
                                 oType = Convert.ToInt16(r["oType"].ToString()),
-                                aId = Convert.ToInt16(r["aId"].ToString()),
+                                pId = Convert.ToInt16(r["pId"].ToString()),
                                 fid = Convert.ToInt16(r["fid"].ToString()),
                                 cityId = Convert.ToInt16(r["cityId"].ToString()),
                                 isPrint = Convert.ToInt16(r["isPrint"].ToString()),

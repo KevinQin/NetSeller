@@ -106,6 +106,7 @@
     <Compile Include="View\_OrderInfo.cs" />
     <Compile Include="View\_SaleMx.cs" />
     <Compile Include="View\_Syslog.cs" />
+    <Compile Include="_UserBank.cs" />
     <Compile Include="_WxPay.cs" />
   </ItemGroup>
   <ItemGroup>

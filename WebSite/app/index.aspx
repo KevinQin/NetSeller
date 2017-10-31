@@ -15,11 +15,11 @@
 </head>
 <body>
     <form id="form1" runat="server"></form>    
-    <div class="container">
+    <div class="container"  style="overflow:hidden;">
         <div class="page index-page tabbar js_show">
             <div class="page__bd" style="height:100%;">
             <div class="weui-tab">
-            <div class="weui-tab__panel">
+            <div class="weui-tab__panel" style="overflow-x:hidden;">
                 <div class="swiper-container"></div>
                 <div class="category-area"></div>
                 <div class="vip-panel"></div>

@@ -40,7 +40,7 @@ namespace Seascape.Model
         public DateTime sendOn { get; set; }
         public DateTime sendDate { get; set; }
         public int oType { get; set; }
-        public int aId { get; set; }
+        public int pId { get; set; }
         public int fid { get; set; }
         public int isFinance { get; set; }
         public DateTime financeOn { get; set; }

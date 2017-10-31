@@ -83,6 +83,7 @@ namespace Seascape.Data.WebView
                                 pName = r["pName"].ToString(),
                                 desp = r["desp"].ToString(),
                                 pInfo = r["pInfo"].ToString(),
+                                pType = 0,
                                 storeNum = Convert.ToInt32(r["storeNum"]),
                                 price = Math.Round(Convert.ToDouble(r["price"]), 2)
                                 /*
@@ -91,6 +92,15 @@ namespace Seascape.Data.WebView
                                 postFee = Convert.ToDouble(r["postFee"])
                                 */ 
                             };
+
+                            string sign = r["sign"].ToString();
+                            if (sign.Length > 0)
+                            {
+                                if (sign.IndexOf("2,") > -1)
+                                {
+                                    p.pType = 2;
+                                }
+                            }
                             
                             //图片列表
                             List<string> ls = new List<string>();

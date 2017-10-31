@@ -18,7 +18,7 @@ namespace Seascape.Model.WebView
         public int isPay { get; set; }
         public int state { get; set; }
         public string memo { get; set; }
-        public int aId { get; set; }
+        public int pId { get; set; }
         public List<log> log { get; set; }
         public int userId { get; set; }
         public List<WebOrderProduct> product { get; set; }

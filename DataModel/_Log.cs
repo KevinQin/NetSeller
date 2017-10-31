@@ -23,6 +23,7 @@ namespace Seascape.Data
             {
                 if (dt != null && dt.Rows.Count > 0)
                 {
+                    Dictionary<int, string> Dic = new _AdminUser().GetAdminUserDic();
                     lp = new List<log>();
                     foreach (DataRow r in dt.Rows)
                     {
@@ -46,6 +47,13 @@ namespace Seascape.Data
                             }
                             catch { }
                         }
+                        if (p.adminID > 0)
+                        {
+                            if (Dic.ContainsKey(p.adminID))
+                            {
+                                p.eName = Dic[p.adminID];
+                            }
+                        }
                         lp.Add(p);
                     }
                 }
@@ -62,6 +70,7 @@ namespace Seascape.Data
             {
                 if (dt != null && dt.Rows.Count > 0)
                 {
+                    Dictionary<int, string> Dic = new _AdminUser().GetAdminUserDic();
                     lp = new List<log>();
                     foreach (DataRow r in dt.Rows)
                     {
@@ -92,6 +101,13 @@ namespace Seascape.Data
 
                             }
                             catch { }
+                        }
+                        if (p.adminID > 0)
+                        {
+                            if (Dic.ContainsKey(p.adminID))
+                            {
+                                p.eName = Dic[p.adminID];
+                            }
                         }
                         lp.Add(p);
                     }
