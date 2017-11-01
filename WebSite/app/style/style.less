@@ -290,6 +290,7 @@ text-align:right;
         background-color: @white-color;
         border-top: 1px solid @border-color-light;
         padding: 0;
+        z-index:9990;
 
         .cart-col {
             flex: 0 0 3rem;
@@ -687,7 +688,7 @@ text-align:right;
         }
 
         .mask-bg {
-            z-index: 99;
+            z-index: 9999;
             position: fixed;
             //display: block;
             bottom: 0;
@@ -699,7 +700,7 @@ text-align:right;
         }
 
         .detail-choose-box {
-            z-index: 100;
+            z-index: 10000;
             position: fixed;
             display: none;
             bottom: 0;
@@ -1528,7 +1529,7 @@ text-align:right;
         color: @primary-color;
     }
 
-    .comment-bd {        
+    .comment-bd {
         .point-row {
             display: flex;
             flex-flow: row nowrap;
@@ -1540,6 +1541,7 @@ text-align:right;
             .img-h-col {
                 flex: 0 0 24%;
                 text-align: center;
+
                 img {
                     border: 1px solid @border-color-light;
                     border-radius: 2px;
@@ -1587,7 +1589,8 @@ text-align:right;
 
         ul {
             margin-bottom: 4rem;
-            background-color: @white-color;           
+            background-color: @white-color;
+
             li {
                 display: flex;
                 flex-flow: row nowrap;
@@ -1633,7 +1636,7 @@ text-align:right;
                             padding-top: 1rem;
                             text-align: right;
                             font-size: @font-size-xxs;
-                            padding-right:.5rem;
+                            padding-right: .5rem;
                         }
                     }
 
@@ -2009,6 +2012,12 @@ text-align:right;
 
             span {
                 display: none;
+                color: @black-color;
+                line-height: 200%;
+                font-size: @font-size-xxs;
+            }
+
+            a {
                 color: @black-color;
                 line-height: 200%;
                 font-size: @font-size-xxs;

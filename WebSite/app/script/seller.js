@@ -729,8 +729,8 @@ var OrderDetail = {
             }           
             $(".order-info").append("<p style='display:none;'>发票类型：电子发票<br/>发票抬头：个人<br/>发票内容：明细</p>");
             //价格
-            $(".price-panel").append("<ul><li><h4>商品总额</h4><h5>￥" + (o.data.allPrice - o.data.postFee + o.data.subPrice).toFixed(2) + "</h5></li><li><h4>+运费</h4><h5>￥" + o.data.postFee.toFixed(2) + "</h5></li><li><h4>-金币</h4><h5>￥" + o.data.subPrice.toFixed(2) + "</h5></li></ul>");
-            $(".price-panel").append("<div class='total-row'>实付款：<em>￥" + o.data.allPrice.toFixed(2) + "</em></div>");
+            $(".price-panel").append("<ul><li><h4>商品总额</h4><h5>￥" + fmtPrice(o.data.allPrice - o.data.postFee) + "</h5></li><li><h4>+运费</h4><h5>￥" + fmtPrice(o.data.postFee) + "</h5></li><li><h4>-金币</h4><h5>￥" + fmtPrice(o.data.subPrice) + "</h5></li></ul>");
+            $(".price-panel").append("<div class='total-row'>实付款：<em>￥" + fmtPrice(o.data.allPrice - o.data.subPrice) + "</em></div>");
             //日志
             var htm="<h5>订单日志</h5><ul>"
             $(o.data.log).each(function (i, _o) {
@@ -1107,6 +1107,7 @@ var OrderList = {
 var PayPage = {
     isSubcribe:0,
     init: function () {
+        showMask();
         var price = request("price");
         var orderno = request("orderno");
         var pname = unescape(request("pname"));
@@ -1126,6 +1127,7 @@ var PayPage = {
         return;
     },
     preDopay: function () {
+        hideMask();
         WxDoPay(PayPage.onPaySuccess, PayPage.onPayFail);
         //$("#btnOK").text("支付中").css({ "background-color": "rgb(69,192,24)" });
     },
@@ -1481,10 +1483,7 @@ var ShopCarPage = {
     },
     loadUnitInfo: function () {
         if (ShopCarPage._PS.length == 0) {
-            var html = '<div style="margin-top:15rem;" class="weui-loadmore weui-loadmore_line"><span class="weui-loadmore__tips">购物车是空的</span></div><div style="text-align:center;"><a href="list.aspx" class="weui-btn weui-btn_mini weui-btn_primary">再逛逛</a></div>';
-            $(".blank-shop").append(html);
-            $(".page__ft").hide();
-            $("#btnEdit").hide();
+            ShopCarPage.showEmpeyInfo();
             return;
         }
         var cnoarray = [];
@@ -1494,6 +1493,11 @@ var ShopCarPage = {
         if (cnoarray.length > 0) {
             $ajax({ fn: 108, unitNo: cnoarray.join(",") }, ShopCarPage.loadUnitInfo_cb, true);
         }        
+    },
+    showEmpeyInfo: function () {
+        $(".weui-loadmore__tips").text("购物车是空的");
+        $(".page__ft").hide();
+        $("#btnEdit").hide();
     },
     loadUnitInfo_cb: function (o) {
         //修改为
@@ -1539,7 +1543,10 @@ var ShopCarPage = {
             $(this).text("编辑");
             $(".price-info-col").show();
             $(".block-btn-col").show();
-            $(".btn-col").hide();           
+            $(".btn-col").hide();
+            if (ShopCarPage._PS.length == 0) {
+                ShopCarPage.showEmpeyInfo();
+            }
         }
     },
     DeleteShopcarItem: function () {
@@ -1614,7 +1621,7 @@ var ShopCarPage = {
         });        
         html += '</ul></div>'
         allPrice = allPrice.toFixed(2);
-        $(".page__bd").append(html);       
+        $(".blank-shop").before(html);       
         $(".block-btn-col span").text("共" + allNum + "件");
         $(".price-info-col em").text(allPrice);
         $(".price-info-col h6").text("总价：" + allPrice + "，优惠：0.00");
@@ -1789,55 +1796,61 @@ var DetailPage = {
         html += '<div class="detail-choose-box">'
         html += '<div class="title-bar"><h4>' + name + '<p>￥<em></em></p></h4><div class="close-btn"><i class="iconfont icon-close"></i></div></div>'
         html += '<div class="choose-panel">'
-        html += '<h6>' + data.unitName + '</h6>'
         var Level = 1;
         var defPrice = 0, _defPrice = 0;
         var defcnum = 0;
-
+        var isEmpty = data.unitName == null || data.unitName == "";
+        var html_ = '<div';
+        if (isEmpty) {
+            html_ += ' style="display:none;"';
+        }
+        html_ += '><h6>' + data.unitName + '</h6>';        
         //一级
         if (data.itemList != null && data.unitList == null) {
-            html += '<ul>';
+            html_ += '<ul>';
             $(data.itemList).each(function (i, _o) {
-                if (_o.uNum > 0) {                    
-                    html += '<li  class="' + (defPrice == 0 ? "active" : "") + '" data-p="' + _o.price + '" data-p2="' + _o.mPrice + '" data-no="' + _o.unitNo + '" data-cnum="' + _o.uNum + '">' + _o.itemName + '</li>'
+                if (_o.uNum > 0) {
+                    html_ += '<li  class="' + (defPrice == 0 ? "active" : "") + '" data-p="' + _o.price + '" data-p2="' + _o.mPrice + '" data-no="' + _o.unitNo + '" data-cnum="' + _o.uNum + '">' + _o.itemName + '</li>'
                     if (defPrice == 0) { defPrice = _o.price; _defPrice = _o.mPrice; defcnum = _o.uNum; }
                 }
-                else {                    
-                    html += '<li  class="disabled" data-p="' + _o.price + '" data-no="' + _o.unitNo + '" data-cnum="' + _o.uNum + '">' + _o.itemName + '</li>'
+                else {
+                    html_ += '<li  class="disabled" data-p="' + _o.price + '" data-no="' + _o.unitNo + '" data-cnum="' + _o.uNum + '">' + _o.itemName + '</li>'
                 }
             });
-            html += '</ul>';
+            html_ += '</ul>';
             Level = 1;
         }
         else {
-            html += '<ul>';
+            html_ += '<ul>';
             $(data.unitList).each(function (i, _o) {
-                html += '<li data-ind="'+ i +'" class="'+  (i==0?"active":"") +'">' + _o.unitValue + '</li>'
+                html_ += '<li data-ind="' + i + '" class="' + (i == 0 ? "active" : "") + '">' + _o.unitValue + '</li>'
             });
-            html += '</ul>';
-            html += '<h6>' + data.unitList[0].itemList[0].unitValue + '</h6>'
-            html += '<ul>';
+            html_ += '</ul>';
+            html_ += '<h6>' + data.unitList[0].itemList[0].unitValue + '</h6>'
+            html_ += '<ul>';
             $(data.unitList[0].itemList).each(function (i, _o) {
                 if (_o.uNum == 0) {
-                    html += '<li  class="disabled" data-p="' + _o.price + '" data-no="' + _o.unitNo + '" data-cnum="' + _o.uNum + '">' + _o.itemName + '</li>'
+                    html_ += '<li  class="disabled" data-p="' + _o.price + '" data-no="' + _o.unitNo + '" data-cnum="' + _o.uNum + '">' + _o.itemName + '</li>'
                 }
                 else {
-                    html += '<li  class="' + (defPrice == 0 ? "active" : "") + '" data-ind="' + i + '" data-p2="' + _o.mPrice + '" data-p="' + _o.price + '" data-no="' + _o.unitNo + '" data-cnum="' + _o.uNum + '">' + _o.itemName + '</li>'
-                    if (defPrice == 0) { defPrice = _o.price; _defPrice = _o.mPrice;defcnum = _o.uNum; }
+                    html_ += '<li  class="' + (defPrice == 0 ? "active" : "") + '" data-ind="' + i + '" data-p2="' + _o.mPrice + '" data-p="' + _o.price + '" data-no="' + _o.unitNo + '" data-cnum="' + _o.uNum + '">' + _o.itemName + '</li>'
+                    if (defPrice == 0) { defPrice = _o.price; _defPrice = _o.mPrice; defcnum = _o.uNum; }
                 }
             });
-            html += '</ul>';
+            html_ += '</ul>';
             Level = 2;
         }
+        html_ += '</div>'
+        html += html_;
         html += '<div class="num-row"><div class="num-bd">购买数量(<span>库存:</span>)</div><div class="num-ft"><div class="sub-col" data-val="-1"><i class="iconfont icon-minus"></i></div><div class="num-col">1</div><div class="plus-col"  data-val="1"><i class="iconfont icon-add1"></i></div></div></div>'
         html += '</div><div class="btn-row"><a href="javascript:;" id="btnOk" class="weui-btn weui-btn_warn">确定</a></div></div>';
         $(".page__bd").append(html);
         $(".sub-col,.plus-col").on("click", DetailPage.ChangeNum);
         $("#btnOk").on("click", DetailPage.AddProductToCar);
         //更新价格
-        $(".title-bar h4 em").text(defPrice);
-        $(".price-col em").text("￥"+defPrice);
-        $(".price-col s").text("￥" + _defPrice);
+        $(".title-bar h4 em").text(fmtPrice(defPrice));
+        $(".price-col em").text("￥" + fmtPrice(defPrice));
+        $(".price-col s").text("￥" + fmtPrice(_defPrice));
         $(".price-row .num-col,.num-bd span").text("库存:" + defcnum);
         $(".icon-close").on("click", function () {
             $(".detail-choose-box").hide();
@@ -1883,9 +1896,9 @@ var DetailPage = {
         $("ul:last").append(html);
         $(".choose-panel ul:last li").on("click", DetailPage.chooseCate);
         //更新价格
-        $(".title-bar h4 em").text(defPrice);
-        $(".price-col em").text("￥" + defPrice);
-        $(".price-col s").text("￥" + _defPrice);
+        $(".title-bar h4 em").text( fmtPrice(defPrice));
+        $(".price-col em").text("￥" + fmtPrice(defPrice));
+        $(".price-col s").text("￥" + fmtPrice(_defPrice));
         $(".price-row .num-col,.num-bd span").text("库存:" + defcnum);
         
     },
@@ -1913,7 +1926,7 @@ var DetailPage = {
             if (DetailPage.isVipProduct) {
                 html += '<img class="vip" src="images/vip.png"/>'
             }
-            html += '<em>￥' + o.data.price + '</em> <s>￥' + o.data.mPrice + '</s></div > <div class="num-col">库存:' + o.data.storeNum + '</div></div ></div > '
+            html += '<em>￥' + fmtPrice(o.data.price) + '</em> <s>￥' + fmtPrice(o.data.mPrice) + '</s></div > <div class="num-col">库存:' + o.data.storeNum + '</div></div ></div > '
             $('.detail-info').append(html);
             var myOPID = $get("openid");
             var utype = parseInt($get("utype"));
@@ -1933,7 +1946,7 @@ var DetailPage = {
             html = '<div class="comment-block" style="display:none;"></div>';
             DetailPage.loadComment();
             $('.detail-info').append(html);
-            $('.detail-info').append('<p class="content">' + unescape(o.data.pInfo) + '</p>');
+            $('.detail-info').append('<div class="content">' + unescape(o.data.pInfo) + '</div>');
             DetailPage.initChooseBox(o.data.unit,o.data.pName);
         }
     },
@@ -2064,9 +2077,9 @@ var ListPage = {
         if ($(".weui-loadmore").length > 0) {
             $(".weui-loadmore").remove();
         }
+        var ind = 0;
         if (o.Return == 0 && o.data.length > 0) {
-            ListPage.DATA = ListPage.DATA.concat(o.data);
-            var ind = 0;
+            ListPage.DATA = ListPage.DATA.concat(o.data);            
             if (ListPage.keyword != "") {
                 ind = 1;
                 $(".product-list:eq(1)").show();
@@ -2163,7 +2176,7 @@ var IndexPage = {
                 var imgUrl = _o.imgUrl.split('@')[0];
                 var html = '<li data-id="' + _o.id + '" data-ind="'+ i +'"><img src="' + BASE_URL + imgUrl + '" />';
                 html += '<h4>' + _o.pName + '</h4>';
-                html += '<div class="info-bar"><div class="desp-col"><p>' + _o.unitName +'</p><em>￥' + _o.price + '</em><s>￥' + _o.mPrice + '</s></div>';
+                html += '<div class="info-bar"><div class="desp-col"><p>' + _o.unitName +'&nbsp;</p><em>￥' + _o.price + '</em><s>￥' + _o.mPrice + '</s></div>';
                 html += '<div class="icon-col"><i class="icon iconfont icon-shopcart10"></i></div></div></li>';
                 $(".product-top-list ul").append(html);
             });
@@ -2353,6 +2366,7 @@ function fmtBankCard(cardno) {
 }
 
 function CheckWechatUserInfo() {
+    if ($get("userid") != null && $get("userid") != "") { return; }
     var code = getParam("code");
     if (code == "") { return GetWechatLink("", PageName + ".aspx"); }
     var openid = $get('openid');

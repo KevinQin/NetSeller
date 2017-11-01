@@ -25,7 +25,9 @@
                 </div>
             </div>
             <div class="page__bd" style="margin-top:2.5rem;">
-                <div class="blank-shop"></div>                
+                <div class="blank-shop">
+                    <div style="margin-top:15rem;" class="weui-loadmore weui-loadmore_line"><span class="weui-loadmore__tips" >没有更多了</span></div><div style="text-align:center;"><a href="list.aspx" class="weui-btn weui-btn_mini weui-btn_primary">再逛逛</a></div>
+                </div>                 
             </div>
             <div class="page__ft">
                 <div class="check-col weui-cells_checkbox">

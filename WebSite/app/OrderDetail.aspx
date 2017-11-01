@@ -35,6 +35,7 @@
             </div>
             <div class="page__ft_detail">
                 <div class="left-col">
+                    <a href="orderlist.aspx">更多订单</a>
                     <span id="btnDelete">删除订单</span>
                 </div>
                 <div class="right-col">
