@@ -73,7 +73,7 @@
                             验证码：
                         </div>
                         <div class="weui-cell__bd">
-                            <input class="weui-input" type="text" required="required" id="txtCode" placeholder="填写验证码"/>
+                            <input class="weui-input" type="number" required="required" id="txtCode" placeholder="填写验证码"/>
                         </div>
                     </div>
                    </div>                

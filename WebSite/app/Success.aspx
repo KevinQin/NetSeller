@@ -26,7 +26,7 @@
         </div>
         <div class="weui-msg__opr-area">
             <p class="weui-btn-area">
-                <a href="javascript:;" class="weui-btn weui-btn_primary">快速关注</a>                
+                <a href="https://mp.weixin.qq.com/s/VscNXAH24mUzwgls9EvWKQ" class="weui-btn weui-btn_primary">快速关注</a>                
             </p>
             <p style="text-align:center;font-size:9pt;color:#888;">
                 <img src="images/qrcode.jpg" style="margin-top:4rem;width:30%;padding:.1rem;border:1px solid #d8d8d8;border-radius:2px;" />

@@ -51,6 +51,8 @@ function wechatConfigSuccess() {
         setTimeout(ListPage.preShare, 2000);
     }else if (PageName == "shareproduct") {
         setTimeout(ShareProdcut.wxConfig_cb,1000);
+    }else if (PageName == "cash") {
+        setTimeout(hideMask, 500);
     }else {
         setTimeout(preShare, 2000);
     }

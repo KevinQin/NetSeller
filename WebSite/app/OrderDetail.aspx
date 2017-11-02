@@ -35,14 +35,14 @@
             </div>
             <div class="page__ft_detail">
                 <div class="left-col">
-                    <a href="orderlist.aspx">更多订单</a>
+                    <a href="orderlist.aspx">更多订单 <i class="iconfont icon-skip"></i></a>
                     <span id="btnDelete">删除订单</span>
                 </div>
                 <div class="right-col">
                     <button type="button" class="weui-btn weui-btn_mini weui-btn_plain-primary" id="btnPay">立即支付</button>
                     <button type="button" class="weui-btn weui-btn_mini weui-btn_plain-primary" id="btnConform">确认收货</button>
                     <button type="button" class="weui-btn weui-btn_mini weui-btn_plain-default" id="btnCancel">取消订单</button>
-                    <button type="button" class="weui-btn weui-btn_mini weui-btn_plain-default" id="btnShare">评价晒单</button>
+                    <button type="button" class="weui-btn weui-btn_mini weui-btn_plain-primary" id="btnShare">评价晒单</button>
                     <button type="button" class="weui-btn weui-btn_mini weui-btn_plain-default" id="btnBuyAgain">再次购买</button>                    
                 </div>
             </div>

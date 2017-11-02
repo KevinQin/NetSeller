@@ -143,9 +143,11 @@ var VipPicture = {
             }
             if (o.Return == 0 && o.data.length > 0) {
                 $(o.data).each(function (j, _o) {
-                    html = '<li data-id="'+ _o.id +'"><img src="' + BASE_URL+ _o.imgUrl + '"/></li>';
+                    html = '<li data-id="'+ _o.id +'"><div style="background-image:url(' + BASE_URL+ _o.imgUrl + ');">&nbsp;</div></li>';
                     $("ul.pic-list").append(html);
                 });
+                var w = $("ul.pic-list li:eq(0) div").width()/750*1334;
+                $("ul.pic-list li div").css({"height": w+"px"})
                 $("ul.pic-list li").on("click", VipPicture.doCreate);
                 $("ul.pic-list li").longPress(function () { return; });
             }
@@ -163,7 +165,8 @@ var VipPicture = {
     },
     doCreate: function () {
         if ($(this).attr("data-has") == "1") {
-            hasCreate($(this).children("img").attr("src"));
+            var url = $(this).children("div").css("background-image").replace("url(\"", "").replace("\")","");
+            VipPicture.hasCreate(url);
         }
         else {
             $ajax({ fn: 114, uid: $get("userid"), openid: $get("openid"), hbid: $(this).attr("data-id") }, VipPicture.doCreate_cb, true);
@@ -171,8 +174,8 @@ var VipPicture = {
     },
     doCreate_cb: function (o) {
         if (o.Return == 0) {
-            var PicUrl = BASE_URL + o.data;
-            $("li[data-id=" + o.Ext + "] img").attr("src", PicUrl);
+            var PicUrl = BASE_URL + o.data;           
+            $("li[data-id=" + o.Ext + "] div").css({ "background-image": "url(" + PicUrl + ")" });
             $("li[data-id=" + o.Ext + "]").attr("data-has", "1");
             VipPicture.hasCreate(PicUrl);
         }
@@ -234,6 +237,7 @@ var FriendPage = {
 
 var GetCashPage = {
     init: function () {
+        $("input").on("focus", UcEdit.inputFocus);
         $("#btnGetCode").on("click", UcEdit.SendSmsCode);        
         $("#btnCancel").on("click", function () { history.back(); });
         $("#btnEditInfo").on("click", function () { $go("UcEdit.aspx"); });
@@ -257,7 +261,7 @@ var GetCashPage = {
             $(".weui-cells__title:eq(1) span").text(Cash);
             $("#txtPrice").val(Cash);
             if (Cash >= 1) {
-                $("#btnOK").on("click", GetCashPage.GetCash);
+                $("#btnOk").on("click", GetCashPage.GetCash);
                 $("#btnOk").removeClass("weui-btn_plain-disabled");
             }           
         }
@@ -279,9 +283,8 @@ var GetCashPage = {
             if (!error) {
                 var smsCode = $("#txtCode").val();
                 var price = $("#txtPrice").val();
-                $ajax({ fn: 118, uid: $get("userid"), mobile: $("#txtMobile").text(), openid: $("openid"), cash: price, code: smsCode }, GetCashPage.GetCash_cb, true);
+                $ajax({ fn: 118, uid: $get("userid"), mobile: $("#txtMobile").text(), openid: $get("openid"), cash: price, code: smsCode }, GetCashPage.GetCash_cb, true);
             }
-            //当return true时，不会显示错误
         });
     },
     GetCash_cb: function (o) {
@@ -291,6 +294,9 @@ var GetCashPage = {
                 className: 'custom-classname',
                 callback: function () { history.back(); }
             });
+        }
+        else {
+            weui.alert(o.Msg);
         }
     }
 };
@@ -330,8 +336,11 @@ var GoldPoint = {
                     var state_word = "--";
                     if (_o.cType == 0) { state_word = "返佣"; }
                     if (_o.cType == 1) { state_word = "消费"; }
-                    if (_o.cType == 2) { state_word = "提现"; }
-                    if (_o.cType == 3) { state_word = "奖励"; }                    
+                    if (_o.cType == 2) { state_word = "奖励"; }
+                    if (_o.cType == 3) {
+                        state_word = "提现";
+                        if (_o.state == 2) { state_word += "(冻结中)"; }
+                    }                    
                     var html = '<li ' +(_o.orderno != null ? "data-no=" + _o.orderNo + '"':"")+'><div class="info-col"><div class="log-photo-col"><img src="' + _o.photoUrl + '"/></div><div class="log-info-col">' + _o.nickName + '<br/>' + new Date(_o.addOn).fmt("yyyy-MM-dd") + '</div></div><div class="price-col">' + state_word + '<br/>' + fmtPrice(_o.coin) + '</div></li>';
                     $("ul.logs").append(html);
                 });
@@ -1162,6 +1171,7 @@ var CashPage = {
     pname: "",
     GoldPoint: 0,
     init: function () {
+        showMask();
         CashPage.getGoldPoint();
         $(_CITYARRAY).each(function (i, o) {
             var pname = o.name;
@@ -1191,7 +1201,6 @@ var CashPage = {
                 id: 'doubleLinePicker'
             });
         });
-
         CashPage.RenderGoods();
         $("#btnWechatAddress").on("click", CashPage.GetWeChatAddress);
         $("#chkUseGold").on("change", CashPage.CountPostFee);
@@ -1202,7 +1211,7 @@ var CashPage = {
     getGoldPoint_cb: function (o) {
         if (o.Return == 0) {
             CashPage.GoldPoint = o.data;
-            $("#goldTip").text("共有" + o.data.toFixed(2) + "个金币");
+            $("#goldTip").text("可用" + o.data.toFixed(2) + "个金币");
             if (o.data <= 0) {
                 $("#goldTitle").hide();
                 $("#goldForm").hide();
@@ -1281,47 +1290,29 @@ var CashPage = {
         }
         return obj;
     },
-    GetWeChatAddress: function () {
-        if ($isDebug) {
-            var res = {"telNumber":"15835116110","userName":"xxx","nationalCode":"140105","errMsg":"openAddress:ok","postalCode":"030032","provinceName":"山西省","cityName":"太原市","countryName":"小店区","detailInfo":"体育南路 永利国际中心九层"};
-            $("#txtMobile").val(res.telNumber);
-            $("#txtName").val(res.userName);
-            //alert(res.provinceName + res.cityName + res.countryName);
-            $("#txtCity").val(res.provinceName + res.cityName);
-            $("#txtAddress").val(res.countryName + res.detailInfo);
-            CashPage.ProvinceName = res.provinceName;
-            CashPage.CountPostFee();
-            CashPage.CheckProvice(res.provinceName);
-        }
-        else {
-            wx.openAddress({
-                trigger: function (res) {
-                    //用户开始拉出地址                
-                },
-                success: function (res) {
-                    /*if (res.provinceName != "山西省") {
-                        $.alert("该产品只限山西地区");
-                        return;
-                    }*/
-                    console.debug(JSON.stringify(res));
-                    $("#txtMobile").val(res.telNumber);
-                    $("#txtName").val(res.userName);
-                    //alert(res.provinceName + res.cityName + res.countryName);
-                    $("#txtCity").val(res.provinceName + res.cityName);
-                    $("#txtAddress").val(res.countryName + res.detailInfo);
-                    //是否在禁售范围内检测
-                    CashPage.ProvinceName = res.provinceName;
-                    CashPage.CountPostFee();
-                    CashPage.CheckProvice(res.provinceName);
-                },
-                cancel: function (res) {
-                    //alert('用户取消拉出地址');
-                },
-                fail: function (res) {
-                    // alert(JSON.stringify(res));
-                }
-            });
-        }
+    GetWeChatAddress: function () {        
+        wx.openAddress({
+            trigger: function (res) {
+                //开始取出地址                
+            },
+            success: function (res) {                    
+                console.debug(JSON.stringify(res));
+                $("#txtMobile").val(res.telNumber);
+                $("#txtName").val(res.userName);
+                $("#txtCity").val(res.provinceName + res.cityName);
+                $("#txtAddress").val(res.countryName + res.detailInfo);
+                //是否在禁售范围内检测
+                CashPage.ProvinceName = res.provinceName;
+                CashPage.CountPostFee();
+                CashPage.CheckProvice(res.provinceName);
+            },
+            cancel: function (res) {
+                //用户取消取出地址
+            },
+            fail: function (res) {
+                //取地址失败 alert(JSON.stringify(res));
+            }
+        });       
     },
     CheckProvice: function (prov) {
         prov = prov.replace("省", "");
