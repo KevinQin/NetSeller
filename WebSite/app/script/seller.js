@@ -339,7 +339,11 @@ var GoldPoint = {
                     if (_o.cType == 2) { state_word = "奖励"; }
                     if (_o.cType == 3) {
                         state_word = "提现";
-                        if (_o.state == 2) { state_word += "(冻结中)"; }
+                        if (_o.state == 2) {
+                            state_word += "(冻结中)";
+                        } else if (_o.state == 9) {
+                            state_word += "(失败)";
+                        }
                     }                    
                     var html = '<li ' +(_o.orderno != null ? "data-no=" + _o.orderNo + '"':"")+'><div class="info-col"><div class="log-photo-col"><img src="' + _o.photoUrl + '"/></div><div class="log-info-col">' + _o.nickName + '<br/>' + new Date(_o.addOn).fmt("yyyy-MM-dd") + '</div></div><div class="price-col">' + state_word + '<br/>' + fmtPrice(_o.coin) + '</div></li>';
                     $("ul.logs").append(html);
